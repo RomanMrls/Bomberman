@@ -20,8 +20,8 @@ player_size = (50,50)
 player = pygame.Rect(player_pos,player_size)
 direction = {pygame.K_LEFT: (-5, 0), pygame.K_RIGHT: (5, 0), pygame.K_UP: (0, -5), pygame.K_DOWN: (0, 5)}
 
-obstacle_pos_list = [[(68.75*i+game_window_pos.x,68.75*j+game_window_pos.y) for i in range(1,11,2)] for j in range(1,11,2)]
-obstacle_size = (68.75,68.75)
+obstacle_pos_list = [[(56.25*i+game_window_pos.x,56.25*j+game_window_pos.y) for i in range(1,13,2)] for j in range(1,11,2)]
+obstacle_size = (56.25,56.25)
 obstacle_rect_list = [[pygame.Rect(pos,obstacle_size) for pos in ligne] for ligne in obstacle_pos_list]
 
 clock = pygame.time.Clock()
