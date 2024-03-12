@@ -25,7 +25,7 @@ direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1
 
 bomb_timer = -1
 bomb = None
-bomb_size = (20,20)
+bomb_size = (25,25)
 def bomb_pos():
     player_center = pygame.Vector2(player.center)
     player_relative_pos = player_center - pygame.Vector2(game_window.topleft)
@@ -53,6 +53,21 @@ floor_number = 1
 key_state = {}
 
 dt = 0
+
+def timer_str(timer_counter) :
+    timer_minutes = timer_counter//60
+    timer_secondes = timer_counter%60
+    if timer_minutes > 0 :
+        if timer_secondes >= 10 :
+            timer_str = str(timer_minutes)+':'+str(timer_secondes)
+        else :
+            timer_str = str(timer_minutes)+':0'+str(timer_secondes)
+    else :
+        if timer_secondes >= 10 :
+            timer_str = str(timer_secondes)
+        else :
+            timer_str = '0'+str(timer_secondes)
+    return timer_str
 
 while not game_over:
     for event in pygame.event.get():
@@ -93,8 +108,8 @@ while not game_over:
         
     score = police.render((str(score_number)), True, (255, 255, 255))
     score_center = pygame.Vector2(score.get_rect().center)
-       
-    timer = police.render((str(timer_counter)), True, (255, 255, 255))
+    
+    timer = police.render((timer_str(timer_counter)), True, (255, 255, 255))
     timer_center = pygame.Vector2(timer.get_rect().center)
     
     floor = police.render((f"Floor : {floor_number}"), True, (255, 255, 255))
