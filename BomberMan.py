@@ -1,4 +1,5 @@
-import pygame,sys
+import pygame
+import sys
 
 pygame.init()
 screen = pygame.display.set_mode((1000, 900))
@@ -20,14 +21,18 @@ game_window= pygame.Rect(game_window_pos,game_size)
 player_pos = pygame.Vector2(game_window_pos)
 player_size = (40,40)
 player = pygame.Rect(player_pos,player_size)
-direction = {pygame.K_LEFT: (-4, 0), pygame.K_RIGHT: (4, 0), pygame.K_UP: (0, -4), pygame.K_DOWN: (0, 4)}
+direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
-
+bomb_timer = -1
+bomb = None
 bomb_size = (20,20)
 def bomb_pos():
-    x = player.topleft[0] - player.topleft[0]%obstacle_size[0] + obstacle_size[0]-bomb_size[0]
-    y = player.topleft[1] - player.topleft[1]%obstacle_size[1] + obstacle_size[1]-bomb_size[1]
-    return pygame.Vector2((x,y))
+    player_center = pygame.Vector2(player.center)
+    player_relative_pos = player_center - pygame.Vector2(game_window.topleft)
+    player_relative_grid_pos = player_relative_pos.elementwise() // pygame.Vector2(obstacle_size)
+    grid_square_center = player_relative_grid_pos.elementwise() * pygame.Vector2(obstacle_size) + pygame.Vector2(obstacle_size) / 2
+    bomb_relative_pos = grid_square_center + pygame.Vector2(game_window.topleft) - pygame.Vector2(bomb_size) / 2
+    return bomb_relative_pos
 
 obstacle_pos_list = [[(56.25*i+game_window_pos.x,56.25*j+game_window_pos.y) for i in range(1,13,2)] for j in range(1,13,2)]
 obstacle_size = (56.25,56.25)
@@ -47,10 +52,10 @@ floor_number = 1
 
 key_state = {}
 
+dt = 0
+
 while not game_over:
-    clock.tick(165)
     for event in pygame.event.get():
-        print(player)
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -60,43 +65,58 @@ while not game_over:
             else:
                 game_over = True
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                bomb = pygame.Rect(bomb_size,bomb_pos())
-                pygame.draw.rect(background,"black",rect)
+            if event.key == pygame.K_SPACE and bomb is None:
+                bomb = pygame.Rect(bomb_pos(), bomb_size)
+                bomb_timer = 0
+                bomb_placed_time = pygame.time.get_ticks()
             elif event.key in direction:
                 key_state[event.key] = True 
         elif event.type == pygame.KEYUP:
             key_state[event.key] = False
-            
+    
+    player_speed = 200
+    player_velocity = pygame.Vector2(0, 0)
     for key, state in key_state.items():
         if state and key in direction:
-            v = direction[key]
-            temp_player = player.copy()
-            temp_player.move_ip(v)
-            if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == list():
-                player.move_ip(v)
+            player_velocity += pygame.Vector2(direction[key]) * player_speed * dt
+    print(dt)
+
+    temp_player = player.move(player_velocity.x, player_velocity.y)
+    if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == list():
+        player = temp_player
+    
+    if bomb_timer >= 0:
+        bomb_timer += dt
+    
+    if bomb_timer >= 3:
+        bomb = None
+        bomb_timer = -1
         
-    score = police.render((f"SCORE = {score_number}"), True, (255, 255, 255))
+    score = police.render((str(score_number)), True, (255, 255, 255))
     score_center = pygame.Vector2(score.get_rect().center)
        
     timer = police.render((str(timer_counter)), True, (255, 255, 255))
     timer_center = pygame.Vector2(timer.get_rect().center)
     
-    floor = police.render((f"FLOOR : {floor_number}"), True, (255, 255, 255))
+    floor = police.render((f"Floor : {floor_number}"), True, (255, 255, 255))
     floor_center = pygame.Vector2(floor.get_rect().center)
 
-    screen.blit(background,(0, 0))
-    screen.blit(scorebar,(0, 0))
+    screen.blit(background, (0, 0))
+    screen.blit(scorebar, (0, 0))
     screen.blit(score, (screenx/2-score_center.x, 75/2-score_center.y))
     screen.blit(timer, (25, 75/2-timer_center.y))
     screen.blit(floor, (screenx-25-floor_center.x*2 , 75/2-floor_center.y))
-    pygame.draw.rect(background,"blue",game_window)
+    pygame.draw.rect(background, "blue", game_window)
     for rect in obstacle_list:
-        pygame.draw.rect(background,"red",rect)
-    pygame.draw.rect(background,"green",player)
+        pygame.draw.rect(background, "red", rect)
+    pygame.draw.rect(background, "green", player)
+    
+    if bomb:
+        pygame.draw.rect(background, "yellow", bomb)
+    
     pygame.display.update()
     
-    dt = clock.tick(60) // 1000
+    dt = clock.tick(60) / 1000
     
 pygame.quit()
 sys.exit()
