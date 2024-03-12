@@ -34,8 +34,8 @@ def bomb_pos():
     bomb_relative_pos = grid_square_center + pygame.Vector2(game_window.topleft) - pygame.Vector2(bomb_size) / 2
     return bomb_relative_pos
 
-obstacle_pos_list = [[(56.25*i+game_window_pos.x,56.25*j+game_window_pos.y) for i in range(1,13,2)] for j in range(1,13,2)]
-obstacle_size = (56.25,56.25)
+obstacle_pos_list = [[(game_size[0]/13*i+game_window_pos.x,game_size[1]/13*j+game_window_pos.y) for i in range(1,13,2)] for j in range(1,13,2)]
+obstacle_size = (game_size[0]/13,game_size[1]/13)
 obstacle_list = [[pygame.Rect(pos,obstacle_size) for pos in ligne] for ligne in obstacle_pos_list]
 obstacle_list = sum(obstacle_list, [])
 
@@ -79,7 +79,6 @@ while not game_over:
     for key, state in key_state.items():
         if state and key in direction:
             player_velocity += pygame.Vector2(direction[key]) * player_speed * dt
-    print(dt)
 
     temp_player = player.move(player_velocity.x, player_velocity.y)
     if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == list():
