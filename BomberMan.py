@@ -1,31 +1,43 @@
-import pygame
-import sys
+import pygame,sys,math
 
+# Initialisation de Pygame
 pygame.init()
+
+# Création de la fenêtre de jeu
 screen = pygame.display.set_mode((1000, 900))
 pygame.display.set_caption('Bomberman')
 
+# Définition des dimensions de l'écran
 screenx = 1000
 screeny = 900
 
+# Surface pour la barre de score en haut de l'écran
 scorebar = background = pygame.Surface((screenx, 75))
-scorebar.fill((255,0,255))
+scorebar.fill((255, 0, 255))  # Couleur rose
 
+# Surface pour l'arrière-plan du jeu
 background = pygame.Surface((screenx, screeny))
-background.fill((0,0,0))
+background.fill((0, 0, 0))  # Couleur noire
 
-game_size = (750,750)
-game_window_pos = pygame.Vector2((screenx-game_size[0])/2,(screeny-game_size[1])/1.5)
-game_window= pygame.Rect(game_window_pos,game_size)
+# Taille et position de la fenêtre de jeu dans l'écran
+game_size = (750, 750)
+game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
+game_window = pygame.Rect(game_window_pos, game_size)
 
+# Position initiale et taille du joueur
 player_pos = pygame.Vector2(game_window_pos)
-player_size = (40,40)
-player = pygame.Rect(player_pos,player_size)
+player_size = (40, 40)
+player = pygame.Rect(player_pos, player_size)
+
+# Directions de mouvement du joueur
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
+# Initialisation des variables pour la bombe
 bomb_timer = -1
 bomb = None
-bomb_size = (25,25)
+bomb_size = (25, 25)
+
+# Fonction pour obtenir la position de la bombe en fonction de la position du joueur et de la grille
 def bomb_pos():
     player_center = pygame.Vector2(player.center)
     player_relative_pos = player_center - pygame.Vector2(game_window.topleft)
@@ -34,41 +46,50 @@ def bomb_pos():
     bomb_relative_pos = grid_square_center + pygame.Vector2(game_window.topleft) - pygame.Vector2(bomb_size) / 2
     return bomb_relative_pos
 
-obstacle_pos_list = [[(game_size[0]/13*i+game_window_pos.x,game_size[1]/13*j+game_window_pos.y) for i in range(1,13,2)] for j in range(1,13,2)]
-obstacle_size = (game_size[0]/13,game_size[1]/13)
-obstacle_list = [[pygame.Rect(pos,obstacle_size) for pos in ligne] for ligne in obstacle_pos_list]
+# Liste des positions des obstacles et initialisation de la taille des obstacles
+obstacle_pos_list = [[(game_size[0] / 13 * i + game_window_pos.x, game_size[1] / 13 * j + game_window_pos.y) for i in range(1, 13, 2)] for j in range(1, 13, 2)]
+obstacle_size = (game_size[0] / 13, game_size[1] / 13)
+# Création des rectangles des obstacles
+obstacle_list = [[pygame.Rect(pos, obstacle_size) for pos in ligne] for ligne in obstacle_pos_list]
+# Aplatir la liste d'obstacles en une seule liste
 obstacle_list = sum(obstacle_list, [])
 
+# Initialisation de l'horloge pour la gestion du temps
 clock = pygame.time.Clock()
 
+# Police de caractères pour le texte
 police = pygame.font.SysFont('chalkduster.ttf', 50)
 
+# Initialisation des variables de jeu
 game_over = False
+pygame.time.set_timer(pygame.USEREVENT, 1000)  # Déclencher un événement toutes les secondes
+timer_counter = 300  # Compteur de temps initial
+score_number = 10  # Score initial
+floor_number = 1  # Numéro de l'étage initial
 
-pygame.time.set_timer(pygame.USEREVENT, 1000)
-timer_counter = 300
-score_number = 10
-floor_number = 1
-
+# Dictionnaire pour stocker l'état des touches du clavier
 key_state = {}
 
+# Initialisation de la variable de temps écoulé (delta time)
 dt = 0
 
-def timer_str(timer_counter) :
-    timer_minutes = timer_counter//60
-    timer_secondes = timer_counter%60
-    if timer_minutes > 0 :
-        if timer_secondes >= 10 :
-            timer_str = str(timer_minutes)+':'+str(timer_secondes)
-        else :
-            timer_str = str(timer_minutes)+':0'+str(timer_secondes)
-    else :
-        if timer_secondes >= 10 :
+# Fonction pour convertir le compteur de temps en une chaîne de caractères au format "mm:ss"
+def timer_str(timer_counter):
+    timer_minutes = timer_counter // 60
+    timer_secondes = timer_counter % 60
+    if timer_minutes > 0:
+        if timer_secondes >= 10:
+            timer_str = str(timer_minutes) + ':' + str(timer_secondes)
+        else:
+            timer_str = str(timer_minutes) + ':0' + str(timer_secondes)
+    else:
+        if timer_secondes >= 10:
             timer_str = str(timer_secondes)
-        else :
-            timer_str = '0'+str(timer_secondes)
+        else:
+            timer_str = '0' + str(timer_secondes)
     return timer_str
 
+# Boucle principale du jeu
 while not game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -89,16 +110,27 @@ while not game_over:
         elif event.type == pygame.KEYUP:
             key_state[event.key] = False
     
+    # Calcul de la vélocité du joueur en fonction des touches enfoncées
     player_speed = 200
     player_velocity = pygame.Vector2(0, 0)
     for key, state in key_state.items():
         if state and key in direction:
-            player_velocity += pygame.Vector2(direction[key]) * player_speed * dt
+            if key in [pygame.K_LEFT, pygame.K_RIGHT]:
+                player_velocity.x += direction[key][0] * player_speed * dt
+            elif key in [pygame.K_UP, pygame.K_DOWN]:
+                player_velocity.y += direction[key][1] * player_speed * dt
 
-    temp_player = player.move(player_velocity.x, player_velocity.y)
-    if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == list():
-        player = temp_player
+    # Déplacement horizontal du joueur
+    temp_player = player.move(player_velocity.x, 0)
+    if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == []:
+        player.x = temp_player.x
     
+    # Déplacement vertical du joueur
+    temp_player = player.move(0, player_velocity.y)
+    if game_window.contains(temp_player) and temp_player.collidelistall(obstacle_list) == []:
+        player.y = temp_player.y
+    
+    # Gestion du minuteur de la bombe
     if bomb_timer >= 0:
         bomb_timer += dt
     
@@ -106,6 +138,7 @@ while not game_over:
         bomb = None
         bomb_timer = -1
         
+    # Rendu du texte de score, du minuteur et du numéro de l'étage
     score = police.render((str(score_number)), True, (255, 255, 255))
     score_center = pygame.Vector2(score.get_rect().center)
     
@@ -115,22 +148,25 @@ while not game_over:
     floor = police.render((f"Floor : {floor_number}"), True, (255, 255, 255))
     floor_center = pygame.Vector2(floor.get_rect().center)
 
+    # Affichage des éléments du jeu sur l'écran
     screen.blit(background, (0, 0))
     screen.blit(scorebar, (0, 0))
-    screen.blit(score, (screenx/2-score_center.x, 75/2-score_center.y))
-    screen.blit(timer, (25, 75/2-timer_center.y))
-    screen.blit(floor, (screenx-25-floor_center.x*2 , 75/2-floor_center.y))
+    screen.blit(score, (screenx / 2 - score_center.x, 75 / 2 - score_center.y))
+    screen.blit(timer, (25, 75 / 2 - timer_center.y))
+    screen.blit(floor, (screenx - 25 - floor_center.x * 2 , 75 / 2 - floor_center.y))
     pygame.draw.rect(background, "blue", game_window)
     for rect in obstacle_list:
         pygame.draw.rect(background, "red", rect)
     pygame.draw.rect(background, "green", player)
     
     if bomb:
-        pygame.draw.rect(background, "yellow", bomb)
+        pygame.draw.rect(background, "black", bomb)
     
     pygame.display.update()
     
+    # Calcul du temps écoulé entre deux boucles
     dt = clock.tick(60) / 1000
-    
+
+# Sortie du jeu
 pygame.quit()
 sys.exit()
