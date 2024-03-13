@@ -193,12 +193,7 @@ while not game_over:
     # Génération de l'étage si le joueur a pris la clé
     if player.colliderect(floor_key):
         floor_number += 1
-        floor_key, bricks_list = gen_floor(floor_number,player.topleft)
-        
-    # Définir le point central souhaité dans la barre supérieure pour le score et le minuteur
-    
-    
-    
+        floor_key, bricks_list = gen_floor(floor_number,player.topleft)    
         
     # Rendu du texte de score, du minuteur et du numéro de l'étage
     score = police.render(str(score_number), True, (255, 255, 255))
