@@ -15,10 +15,6 @@ pygame.display.set_caption('Cyberblast 9000')
 screenx = 1000
 screeny = 900
 
-# Surface pour la barre de score en haut de l'écran
-scorebar = background = pygame.Surface((screenx, 75))
-scorebar.fill((255, 0, 255))  # Couleur rose
-
 # Surface pour l'arrière-plan du jeu
 background = pygame.image.load("background.png")
 
@@ -63,7 +59,7 @@ unbreakables_list = [pygame.Rect(pos, unbreakables_size) for pos in unbreakables
 clock = pygame.time.Clock()
 
 # Police de caractères pour le texte
-police = pygame.font.SysFont('chalkduster.ttf', 50)
+police = pygame.font.SysFont('chalkduster.ttf', 40)
 
 # Initialisation des variables de jeu
 game_over = False
@@ -199,21 +195,32 @@ while not game_over:
         floor_number += 1
         floor_key, bricks_list = gen_floor(floor_number,player.topleft)
         
+    # Définir le point central souhaité dans la barre supérieure pour le score et le minuteur
+    
+    
+    
+        
     # Rendu du texte de score, du minuteur et du numéro de l'étage
-    score = police.render((str(score_number)), True, (255, 255, 255))
-    score_center = pygame.Vector2(score.get_rect().center)
+    score = police.render(str(score_number), True, (255, 255, 255))
+    score_rect = score.get_rect()
+    score_center_point = (screenx // 2, 75 // 2)
+    score_pos = (score_center_point[0] - score_rect.width // 2, score_center_point[1] - score_rect.height // 2)
 
-    timer = police.render((timer_str(timer_counter)), True, (255, 255, 255))
-    timer_center = pygame.Vector2(timer.get_rect().center)
-
-    floor = police.render((f"Floor : {floor_number}"), True, (255, 255, 255))
-    floor_center = pygame.Vector2(floor.get_rect().center)
-
+    timer = police.render(timer_str(timer_counter), True, (255, 255, 255))
+    timer_rect = timer.get_rect()
+    timer_center_point = (92.5, 75 // 2)
+    timer_pos = (timer_center_point[0] - timer_rect.width // 2, timer_center_point[1] - timer_rect.height // 2)
+    
+    floor = police.render(f"Floor : {floor_number}", True, (255, 255, 255))
+    floor_rect = floor.get_rect()
+    floor_center_point = (screenx-145 , 75 // 2)
+    floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
+    
     # Affichage des éléments du jeu sur l'écran
     screen.blit(background, (0, 0))
-    screen.blit(score, (screenx / 2 - score_center.x, 75 / 2 - score_center.y))
-    screen.blit(timer, (25, 75 / 2 - timer_center.y))
-    screen.blit(floor, (screenx - 25 - floor_center.x * 2 , 75 / 2 - floor_center.y))
+    screen.blit(score, score_pos)
+    screen.blit(timer, timer_pos)
+    screen.blit(floor, floor_pos)
     pygame.draw.rect(background, "blue", game_window)
     for rect in unbreakables_list:
         pygame.draw.rect(background, "purple", rect)
