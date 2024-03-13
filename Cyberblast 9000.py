@@ -36,6 +36,9 @@ bomb_timer = -1
 bomb = None
 bomb_size = (25, 25)
 
+explosion_trail_timer = -1
+explosion_trail = list()
+
 # Fonction pour obtenir la position de la bombe en fonction de la position du joueur et de la grille
 def bomb_pos():
     player_center = pygame.Vector2(player.center)
@@ -44,6 +47,25 @@ def bomb_pos():
     grid_square_center = player_relative_grid_pos.elementwise() * pygame.Vector2(unbreakables_size) + pygame.Vector2(unbreakables_size) / 2
     bomb_relative_pos = grid_square_center + pygame.Vector2(game_window.topleft) - pygame.Vector2(bomb_size) / 2
     return bomb_relative_pos
+
+# Fonction pour détruire les tuiles autour de la bombe dans un certain rayon
+def bomb_explosion(bomb, brick_rect_list, player, radius):
+    explosion_trail = list()
+    player_distance = abs(bomb.centerx - player.centerx) + abs(bomb.centery - player.centery)
+    
+    if player_distance <= radius * 55:
+        return True, explosion_trail
+    
+    explosion_trail.append(pygame.Rect(bomb.centerx - 55/2, bomb.centery - 55/2, 55, 55))
+    pattern = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+    for dx, dy in pattern:
+        for step in range(1, radius):
+            explosion_trail.append(pygame.Rect(bomb.centerx + dx * step * 55 - 55/2, bomb.centery + dy * step * 55 - 55/2, 55, 55))
+    for brick_rect in brick_rect_list:
+        distance = abs(bomb.centerx - brick_rect.centerx) + abs(bomb.centery - brick_rect.centery)
+        if distance <= radius * 55:
+            brick_rect_list.remove(brick_rect)
+    return False,explosion_trail
 
 # Liste des positions des briques unbreakables et initialisation de la taille des briques unbreakables
 unbreakables_size = (game_size[0] / 13, game_size[1] / 13)
@@ -156,7 +178,6 @@ while not game_over:
             if event.key == pygame.K_SPACE and bomb is None:
                 bomb = pygame.Rect(bomb_pos(), bomb_size)
                 bomb_timer = 0
-                bomb_placed_time = pygame.time.get_ticks()
             elif event.key in direction:
                 key_pressed_state[event.key] = True
         elif event.type == pygame.KEYUP:
@@ -174,21 +195,28 @@ while not game_over:
 
     # Déplacement horizontal du joueur
     temp_player = player.move(player_velocity.x, 0)
-    if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list) == []:
+    if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+bricks_list) == []:
         player.x = temp_player.x
 
     # Déplacement vertical du joueur
     temp_player = player.move(0, player_velocity.y)
-    if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list) == []:
+    if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+bricks_list) == []:
         player.y = temp_player.y
 
     # Gestion du minuteur de la bombe
     if bomb_timer >= 0:
         bomb_timer += dt
-
-    if bomb_timer >= 3:
+    if bomb_timer >= 1.5:
+        game_over,explosion_trail = bomb_explosion(bomb, bricks_list, player, 2)
         bomb = None
         bomb_timer = -1
+        explosion_trail_timer = 0
+    
+    if explosion_trail_timer >= 0:
+        explosion_trail_timer += dt
+    if explosion_trail_timer >= 0.5:
+        explosion_trail_timer = -1
+        explosion_trail = []
     
     # Génération de l'étage si le joueur a pris la clé
     if player.colliderect(floor_key):
@@ -217,10 +245,13 @@ while not game_over:
     screen.blit(timer, timer_pos)
     screen.blit(floor, floor_pos)
     pygame.draw.rect(background, "blue", game_window)
-    for rect in unbreakables_list:
-        pygame.draw.rect(background, "purple", rect)
+    for unbreakables_bricks in unbreakables_list:
+        pygame.draw.rect(background, "purple", unbreakables_bricks)
     for brick in bricks_list:
         pygame.draw.rect(background, "white", brick)
+    for explosion in explosion_trail:
+        if game_window.contains(explosion) and explosion.collidelistall(unbreakables_list) == []:
+            pygame.draw.rect(background, "orange", explosion)
     pygame.draw.rect(background, "yellow", floor_key)
     pygame.draw.rect(background, "green", player)
 
