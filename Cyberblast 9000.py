@@ -4,98 +4,84 @@ import math
 import random
 from random import randint
 
-# Initialisation de Pygame
-pygame.init()
+# Classes
 
-# Création de la fenêtre de jeu
-screen = pygame.display.set_mode((1000, 900))
-pygame.display.set_caption('Cyberblast 9000')
+class Brick:
+    def __init__(self, pos, durability):
+        # Initialisation d'une brique avec sa position et sa durabilité
+        self.__rect = pygame.Rect(pos, brick_size)
+        self.__durability = durability
+    
+    def rect(self):
+        # Renvoie le rectangle représentant la brique
+        return self.__rect
 
-# Définition des dimensions de l'écran
-screenx = 1000
-screeny = 900
+    def boom(self):
+        # Réduit la durabilité de la brique lorsqu'elle est touchée par une explosion
+        self.__durability -= 1
 
-# Surface pour l'arrière-plan du jeu
-game_background = pygame.image.load("game_background.png")
-menu_background = pygame.image.load("menu_background.png")
-arena_background = pygame.image.load("arene2.png")
+    def is_destroyed(self):
+        # Vérifie si la brique est détruite
+        return self.__durability <= 0
 
-button_size = (500,100)
-play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
+# Functions
 
-info_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 3.25 * screeny / 5 - button_size[1]/2) , button_size)
-
-exit_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 4 * screeny / 5 - button_size[1]/2) , button_size)
-
-# Taille et position de la fenêtre de jeu dans l'écran
-game_size = (750, 750)
-game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
-game_window = pygame.Rect(game_window_pos, game_size)
-
-# Position initiale et taille du joueur
-player_pos = pygame.Vector2(game_window_pos)
-player_size = (40, 40)
-player = pygame.Rect(player_pos, player_size)
-
-# Directions de mouvement du joueur
-direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
-
-# Initialisation des variables pour la bombe
-bomb_timer = -1
-bomb = None
-bomb_size = (25, 25)
-
-explosion_trail_timer = -1
-explosion_trail = list()
-
-# Fonction pour obtenir la position de la bombe en fonction de la position du joueur et de la grille
 def bomb_pos():
+    # Calcule la position de la bombe en fonction de la position du joueur et de la grille
     player_center = pygame.Vector2(player.center)
     player_relative_pos = player_center - pygame.Vector2(game_window.topleft)
-    player_relative_grid_pos = player_relative_pos.elementwise() // pygame.Vector2(unbreakables_size)
-    grid_square_center = player_relative_grid_pos.elementwise() * pygame.Vector2(unbreakables_size) + pygame.Vector2(unbreakables_size) / 2
-    bomb_relative_pos = grid_square_center + pygame.Vector2(game_window.topleft) - pygame.Vector2(bomb_size) / 2
-    return bomb_relative_pos
+    grid_square_size = pygame.Vector2(brick_size[0] + 2, brick_size[1] + 2)
+    player_relative_grid_pos = player_relative_pos.elementwise() // grid_square_size
+    grid_square_top_left = player_relative_grid_pos.elementwise() * grid_square_size + pygame.Vector2(margin, margin)
+    bomb_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - bomb_size[0] +2)/2, (brick_size[1] - bomb_size[1] + 2)/2 ))
+    return bomb_position
 
-# Fonction pour détruire les tuiles autour de la bombe dans un certain rayon
 def bomb_explosion(bomb, brick_rect_list, radius):
-    explosion_trail = list()    
-    explosion_trail.append(pygame.Rect(bomb.centerx - 55/2, bomb.centery - 55/2, 55, 55))
-    pattern = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-    for dx, dy in pattern:
-        for step in range(1, radius):
-            explosion_trail.append(pygame.Rect(bomb.centerx + dx * step * 55 - 55/2, bomb.centery + dy * step * 55 - 55/2, 55, 55))
+    # Génère une liste de rectangles représentant l'explosion de la bombe
+    explosion_trail = []
+    explosion_size = (57, 57)
+    explosion_trail.append(pygame.Rect(bomb.centerx - explosion_size[0] // 2, bomb.centery - explosion_size[1] // 2, explosion_size[0], explosion_size[1]))
+    for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+        for i in range(1, radius):
+            explosion_x = bomb.centerx + dx * i * brick_size[0] - explosion_size[0] // 2
+            explosion_y = bomb.centery + dy * i * brick_size[1] - explosion_size[1] // 2
+            explosion_rect = pygame.Rect(explosion_x, explosion_y, explosion_size[0], explosion_size[1])
+            collided_with_unbreakable = False
+            for brick in brick_rect_list:
+                if explosion_rect.collidelistall(unbreakables_list):
+                    collided_with_unbreakable = True
+                    break
+            if not collided_with_unbreakable:
+                explosion_trail.append(explosion_rect)
+            else:
+                break
     return explosion_trail
 
-# Liste des positions des briques unbreakables et initialisation de la taille des briques unbreakable
-unbreakables_size = (game_size[0] / 13, game_size[1] / 13)
-unbreakables_pos_list = [[(round(game_size[0] / 13 * i + game_window_pos.x , 5), round(game_size[1] / 13 * j + game_window_pos.y, 5)) for i in range(1, 13, 2)] for j in range(1, 13, 2)]
-unbreakables_pos_list = sum(unbreakables_pos_list, [])
+def gen_bricks(num_bricks, player_pos, floor_key):
+    # Génère une liste de briques
+    bricks_list = []
+    for i in range(0, 13):
+        for j in range(0, 13):
+            brick_pos = ((1 + margin + (game_size[0]-margin*2) / 13 * i + game_window_pos.x), (1 + margin + (game_size[1]-margin*2) / 13 * j + game_window_pos.y))
+            brick_rect = pygame.Rect(brick_pos, brick_size)
+            if not brick_rect.contains(floor_key) and brick_rect.collidelistall(unbreakables_list) == []:
+                bricks_list.append(brick_rect)
+    player_temp_rect = pygame.Rect(player_pos, (brick_size[0]*2, brick_size[1]*2))
+    bricks_list = [brick_rect for brick_rect in bricks_list if not player_temp_rect.colliderect(brick_rect)]
+    return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
 
-# Création des briques unbreakables
-unbreakables_list = [pygame.Rect(pos, unbreakables_size) for pos in unbreakables_pos_list]
+def gen_floor(floor_number,player_pos):
+    # Génère la structure de l'étage
+    key_grid_pos = (randint(0, 6) * 2, randint(0, 6) * 2)
+    key_size = (25,25)
+    key_x = 1 + margin + game_window_pos.x + (key_grid_pos[0] * game_size[0] / 13) + (game_size[0] / 13 - key_size[0]) / 2
+    key_y = 1 + margin + game_window_pos.y + (key_grid_pos[1] * game_size[1] / 13) + (game_size[1] / 13 - key_size[1]) / 2
+    floor_key = pygame.Rect((key_x, key_y),key_size)
+    bricks_list = gen_bricks(100, player_pos, floor_key)
+    return floor_key, bricks_list
 
-# Initialisation de l'horloge pour la gestion du temps
-clock = pygame.time.Clock()
-
-# Police de caractères pour le texte
-police = pygame.font.SysFont('chalkduster.ttf', 40)
-title_police = pygame.font.SysFont('chalkduster.ttf', 130)
-
-# Initialisation des variables de jeu
-pygame.time.set_timer(pygame.USEREVENT, 1000)  # Déclencher un événement toutes les secondes
-timer_counter = 300  # Compteur de temps initial
-score_number = 10  # Score initial
-floor_number = 1  # Numéro de l'étage initial
-
-# Dictionnaire pour stocker l'état des touches du clavier
-key_pressed_state = {}
-
-# Initialisation de la variable de temps écoulé (delta time)
-dt = 0
-
-# Fonction pour convertir le compteur de temps en une chaîne de caractères au format "mm:ss"
 def timer_str(timer_counter):
+    # Convertit le compteur de temps en une chaîne de caractères au format "mm:ss"
     timer_minutes = timer_counter // 60
     timer_secondes = timer_counter % 60
     if timer_minutes > 0:
@@ -110,83 +96,89 @@ def timer_str(timer_counter):
             timer_str = '0' + str(timer_secondes)
     return timer_str
 
-# Classe Brick pour représenter les blocs cassables
-class Brick:
-    def __init__(self, pos, durability):
-        self.__rect = pygame.Rect(pos, (game_size[0] / 13, game_size[1] / 13))
-        self.__durability = durability
-    
-    def rect(self):
-        return self.__rect
+# Initializations
 
-    def boom(self):
-        self.__durability -= 1
+pygame.init()
 
-    def is_destroyed(self):
-        return self.__durability <= 0
-    
-# Fonction pour générer les briques
-def gen_bricks(num_bricks, player_pos, floor_key):
-    brick_size = (55, 55)
-    bricks_list = []
+screen = pygame.display.set_mode((1000, 900))
+pygame.display.set_caption('Cyberblast 9000')
 
-    for i in range(0, 13):
-        for j in range(0, 13):
-            brick_pos = (round(game_size[0] / 13 * i + game_window_pos.x, 5), round(game_size[1] / 13 * j + game_window_pos.y, 5))
-            brick_rect = pygame.Rect(brick_pos, brick_size)
-            if not brick_rect.contains(floor_key) and brick_rect.collidelistall(unbreakables_list) == []:
-                bricks_list.append(brick_rect)
-    
-    player_temp_rect = pygame.Rect(player_pos, (brick_size[0]*2, brick_size[1]*2))
-    bricks_list = [brick_rect for brick_rect in bricks_list if not player_temp_rect.colliderect(brick_rect)]
+screenx = 1000
+screeny = 900
 
-    return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
+game_background = pygame.image.load("game_background.png")
+menu_background = pygame.image.load("menu_background.png")
+arena_background = pygame.image.load("arena1_background.png")
 
-# Fonction pour générer la structure de l'étage
-def gen_floor(floor_number,player_pos):
-    # Génération de la clé
-    key_grid_pos = (randint(0, 6) * 2, randint(0, 6) * 2)
-    key_size = (25,25)
-    
-    key_x = game_window_pos.x + (key_grid_pos[0] * game_size[0] / 13) + (game_size[0] / 13 - key_size[0]) / 2
-    key_y = game_window_pos.y + (key_grid_pos[1] * game_size[1] / 13) + (game_size[1] / 13 - key_size[1]) / 2
-    
-    floor_key = pygame.Rect((key_x, key_y),key_size)
-    
-    #Génération des blocs
-    bricks_list = gen_bricks(100, player_pos, floor_key)
+button_size = (500,100)
+play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
+info_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 3.25 * screeny / 5 - button_size[1]/2) , button_size)
+exit_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 4 * screeny / 5 - button_size[1]/2) , button_size)
 
-    return floor_key, bricks_list
+game_size = (750, 750)
+game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
+game_window = pygame.Rect(game_window_pos, game_size)
+margin = 9/2
 
-# Génération du premier étage
-floor_key, bricks_list = gen_floor(floor_number,player_pos)
+player_size = (50, 50)
+player_starting_pos = pygame.Vector2(game_window_pos)
+player = pygame.Rect(player_starting_pos, player_size)
 
-game_over = False
+direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
+
+bomb_size = (25,25)
+
+brick_size = (55, 55)
+unbreakables_pos_list = [[((1 + margin + (game_size[0]-margin*2) / 13 * i + game_window_pos.x), (1 + margin + (game_size[1]-margin*2) / 13 * j + game_window_pos.y)) for i in range(1, 13, 2)] for j in range(1, 13, 2)]
+unbreakables_pos_list = sum(unbreakables_pos_list, [])
+
+unbreakables_list = [pygame.Rect(pos, brick_size) for pos in unbreakables_pos_list]
+
+clock = pygame.time.Clock()
+
+police = pygame.font.SysFont('chalkduster.ttf', 40)
+title_police = pygame.font.SysFont('chalkduster.ttf', 130)
+
+key_pressed_state = {}
+
+dt = 0
+
+# Boucle principale
+
 playing = True
 in_game = False
 
-# Boucle principale du jeu
 while playing:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         if not in_game:
-             click = pygame.mouse.get_pressed()
-             if click[0]:
-                 if play_button.collidepoint(pygame.mouse.get_pos()):
-                     in_game = True
-                 elif exit_button.collidepoint(pygame.mouse.get_pos()):
-                    playing = False
-
-             title = title_police.render("Cyberblast 9000", True, (255, 255, 255))
-             title_rect = title.get_rect()
-             screen.blit(menu_background, (0, 0))
-             screen.blit(title, (screenx / 2 - title_rect.centerx, screeny / 5 - title_rect.centery))
-             pygame.draw.rect(menu_background, "black", play_button)
-             pygame.draw.rect(menu_background, "black", info_button)
-             pygame.draw.rect(menu_background, "black", exit_button)
-             pygame.display.update()
+            click = pygame.mouse.get_pressed()
+            if click[0]:
+                if play_button.collidepoint(pygame.mouse.get_pos()):
+                    in_game = True
+                    game_over = False
+                    timer_counter = 300
+                    score_number = 10
+                    floor_number = 1
+                    key_pressed_state = {}
+                    bomb_timer = -1
+                    bomb = None
+                    explosion_trail_timer = -1
+                    explosion_trail = []
+                    floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
+                    player.topleft = player_starting_pos
+            elif exit_button.collidepoint(pygame.mouse.get_pos()):
+                playing = False
+            title = title_police.render("Cyberblast 9000", True, (255, 255, 255))
+            title_rect = title.get_rect()
+            screen.blit(menu_background, (0, 0))
+            screen.blit(title, (screenx / 2 - title_rect.centerx, screeny / 5 - title_rect.centery))
+            pygame.draw.rect(menu_background, "black", play_button)
+            pygame.draw.rect(menu_background, "black", info_button)
+            pygame.draw.rect(menu_background, "black", exit_button)
+            pygame.display.update()
         else:
             while not game_over:
                 for event in pygame.event.get():
@@ -194,7 +186,7 @@ while playing:
                         if timer_counter > 0:
                             timer_counter -= 1
                         else:
-                            game_over, playing = True, False
+                            game_over, in_game = True, False
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_SPACE and bomb is None:
                             bomb = pygame.Rect(bomb_pos(), bomb_size)
@@ -204,7 +196,6 @@ while playing:
                     elif event.type == pygame.KEYUP:
                         key_pressed_state[event.key] = False
 
-                # Calcul de la vélocité du joueur en fonction des touches enfoncées
                 player_speed = 200
                 player_velocity = pygame.Vector2(0, 0)
                 for key, state in key_pressed_state.items():
@@ -214,17 +205,14 @@ while playing:
                         elif key in [pygame.K_UP, pygame.K_DOWN]:
                             player_velocity.y += direction[key][1] * player_speed * dt
 
-                # Déplacement horizontal du joueur
                 temp_player = player.move(player_velocity.x, 0)
                 if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+bricks_list) == []:
                     player.x = temp_player.x
 
-                # Déplacement vertical du joueur
                 temp_player = player.move(0, player_velocity.y)
                 if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+bricks_list) == []:
                     player.y = temp_player.y
 
-                # Gestion du minuteur de la bombe
                 if bomb_timer >= 0:
                     bomb_timer += dt
                 if bomb_timer >= 1.5:
@@ -239,14 +227,12 @@ while playing:
                     explosion_trail_timer = -1
                     explosion_trail = []
 
-                # Génération de l'étage si le joueur a pris la clé
                 if player.colliderect(floor_key):
                     floor_number += 1
                     floor_key, bricks_list = gen_floor(floor_number,player.topleft)
                 if player.collidelistall(explosion_trail):
-                    game_over = game_over, playing = True, False
+                    game_over, in_game = True, False
 
-                # Rendu du texte de score, du minuteur et du numéro de l'étage
                 score = police.render(str(score_number), True, (255, 255, 255))
                 score_rect = score.get_rect()
                 score_center_point = (screenx // 2, 75 // 2)
@@ -262,12 +248,11 @@ while playing:
                 floor_center_point = (screenx-145 , 75 // 2)
                 floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
 
-                # Affichage des éléments du jeu sur l'écran
                 screen.blit(game_background, (0, 0))
                 screen.blit(score, score_pos)
                 screen.blit(timer, timer_pos)
                 screen.blit(floor, floor_pos)
-                #pygame.draw.rect(game_background, "blue", game_window)
+                game_background.blit(arena_background, game_window_pos)
                 for unbreakables_bricks in unbreakables_list:
                     pygame.draw.rect(game_background, "purple", unbreakables_bricks)
                 for brick in bricks_list:
@@ -284,11 +269,8 @@ while playing:
                     pygame.draw.rect(game_background, "black", bomb)
 
                 pygame.display.update()
-    
 
-    # Calcul du temps écoulé entre deux boucles
     dt = clock.tick(60) / 1000
 
-# Sortie du jeu
 pygame.quit()
 sys.exit()
