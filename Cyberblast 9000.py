@@ -26,7 +26,47 @@ class Brick:
     def is_destroyed(self):
         # Vérifie si la brique est détruiteclass Brick:
         return self.__durability < 1
-
+    
+class Powerup:
+    def __init__(self, pos, powerup_type):
+        self.__rect = pygame.Rect(pos, powerup_size)
+        self.__powerup_type = powerup_type
+        self.__use_time = 0
+             
+    def rect(self):
+        return self.__rect
+    
+    def get_powerup_type(self)
+        return self.__powerup_type
+    
+    def use(self):
+        score -= 10
+        use_time -= 1
+        match self.__powerup_type:
+            case "coin" :
+                score += 15
+            case "radius_up" :
+                radius += 1
+            case "radius_down" :
+                if radius > 1:
+                    radius -= 1
+            case "strenght_up" :
+                strenght += 1
+            case "strenght_down" :
+                if strenght > 1:
+                    strenght -= 1
+            case "piercing_up" :
+                piercing += 1
+            case "piercing_down" :
+                if piercing > 1:
+                    piercing -= 1
+            case "speed_up" :
+                player_speed += 10
+            case "speed_down":
+                player_speed -= 10
+            case "bomb_number" :
+                bomb_number += 1
+    
 # Functions
 
 def bomb_pos():
@@ -39,39 +79,54 @@ def bomb_pos():
     bomb_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - bomb_size[0] +2)/2, (brick_size[1] - bomb_size[1] + 2)/2 ))
     return bomb_position
 
-def bomb_explosion(bomb, bricks_list, radius, power, strenght):
+def bomb_explosion(bomb, bricks_list, radius, piercing, strenght):
     # Génère une liste de rectangles représentant l'explosion de la bombe
     explosion_trail = []
     explosion_size = (57, 57)
     explosion_trail.append(pygame.Rect(bomb.centerx - explosion_size[0] // 2, bomb.centery - explosion_size[1] // 2, explosion_size[0], explosion_size[1]))
     for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
         for i in range(1, radius):
-            power_left = power
+            piercing_left = piercing
             collided_with_block = False
             explosion_x = bomb.centerx + dx * i * brick_size[0] - explosion_size[0] // 2
             explosion_y = bomb.centery + dy * i * brick_size[1] - explosion_size[1] // 2
             explosion_rect = pygame.Rect(explosion_x, explosion_y, explosion_size[0], explosion_size[1])
             for brick in bricks_list:
                 if explosion_rect.colliderect(brick.rect()):
-                    if power_left > 0:
+                    if piercing_left > 0:
                         for _ in range(strenght):
                             brick.boom()
-                        power_left -= 1
+                        piercing_left -= 1
                     else:
                         collided_with_block = True
                         break
             if explosion_rect.collidelist(unbreakables_list) != -1:
                 break
             explosion_trail.append(explosion_rect)
-            if collided_with_block or power_left <= 0:
+            if collided_with_block or piercing_left <= 0:
                 break
     return explosion_trail
+
+def powerup_appear():
+    rand = random.random()
+    power_up = None
+    if rand < 0.05:
+        rand_power_up = random.random():
+        if rand_power_up < 0.1:
+            power_up = random.choice(["strenght","piercing"])
+        elif rand_power_up < 0.3:
+            power_up = random.choice([])
+        elif rand_power_up < 0.5
+            power_up = random.choice([])
+        else:
+            power_up = "coin"
+    return power_up
 
 def brick_number(floor_number):
     min_bricks = floor_number+floor_number//15
     max_bricks = floor_number+floor_number//10
-    min_bricks = max(min(min_bricks, 133),50)
-    max_bricks = min(max(max_bricks, 50),133)
+    min_bricks = max(min(min_bricks, 100),50)
+    max_bricks = min(max(max_bricks, 50),100)
     return random.randint(min_bricks, max_bricks)
 
 def brick_durability(floor_number):
@@ -107,7 +162,8 @@ def gen_floor(floor_number,player_pos):
     key_y = margin/2 + game_window_pos.y + (key_grid_pos[1] * (game_size[1]-margin) / 13) + ((game_size[1]-margin) / 13 - key_size[1]) / 2
     floor_key = pygame.Rect((key_x, key_y),key_size)
     bricks_list = gen_bricks(brick_number(floor_number), player_pos, floor_key, floor_number)
-    return floor_key, bricks_list
+    trap = ((random.choice(bricks_list)).rect()).copy()
+    return trap, floor_key, bricks_list
 
 def floor_timer(floor_number):
     floor_time = 180 - floor_number-floor_number//2
@@ -161,6 +217,9 @@ player = pygame.Rect(player_starting_pos, player_size)
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
 bomb_size = (25,25)
+key_size = (25,25)
+powerup_size = (20,20)
+key_picked_up = False
 
 brick_size = (55, 55)
 unbreakables_pos_list = [[((1 + margin + (game_size[0]-margin*2) / 13 * i + game_window_pos.x), (1 + margin + (game_size[1]-margin*2) / 13 * j + game_window_pos.y)) for i in range(1, 13, 2)] for j in range(1, 13, 2)]
@@ -169,6 +228,8 @@ unbreakables_pos_list = sum(unbreakables_pos_list, [])
 unbreakables_list = [pygame.Rect(pos, brick_size) for pos in unbreakables_pos_list]
 
 clock = pygame.time.Clock()
+clock.tick(165)
+
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
 police = pygame.font.SysFont('chalkduster.ttf', 40)
@@ -194,16 +255,17 @@ while playing:
             if play_button.collidepoint(pygame.mouse.get_pos()):
                 in_game = True
                 game_over = False
-                score_number = 10
+                score_number = 500
                 floor_number = 1
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
-                bomb_timer = -1
-                bomb = None
+                bomb_on_grid = list()
+                bomb_number = 1
                 explosion_trail_timer = -1
                 explosion_trail = []
-                floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
+                trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
                 player.topleft = player_starting_pos
+                radius, piercing, strenght = 1,1,1
                     
             elif exit_button.collidepoint(pygame.mouse.get_pos()):
                 playing = False
@@ -226,7 +288,7 @@ while playing:
                         game_over, in_game = True, False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and bomb is None:
-                        bomb = pygame.Rect(bomb_pos(), bomb_size)
+                        bomb_on_grid.append(pygame.Rect(bomb_pos(), bomb_size))
                         bomb_timer = 0
                     elif event.key in direction:
                         key_pressed_state[event.key] = True
@@ -253,7 +315,7 @@ while playing:
             if bomb_timer >= 0:
                 bomb_timer += dt
             if bomb_timer >= 1.5:
-                explosion_trail = bomb_explosion(bomb, bricks_list, 3, 2, 2)
+                explosion_trail = bomb_explosion(bomb, bricks_list, radius, piercing, strenght)
                 bomb = None
                 bomb_timer = -1
                 explosion_trail_timer = 0
@@ -264,14 +326,15 @@ while playing:
                 for brick in bricks_list:
                         if brick.is_destroyed():
                             bricks_list.remove(brick)
-                            score_number += 10
                 explosion_trail_timer = -1
                 explosion_trail = []
-
+            
             if player.colliderect(floor_key):
+                key_picked_up = True
+            if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
-                score_number += 500
-                floor_key, bricks_list = gen_floor(floor_number,player.topleft)
+                score_number += 100
+                trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
                 timer_counter = floor_timer(floor_number)
             if player.collidelistall(explosion_trail):
                 game_over, in_game = True, False
@@ -299,19 +362,29 @@ while playing:
             for unbreakables_bricks in unbreakables_list:
                 pygame.draw.rect(game_background, "purple", unbreakables_bricks)
             for brick in bricks_list:
-                match brick.durability():
+                if brick.durability() == 1:
+                    pygame.draw.rect(game_background, pygame.Color("#ffffff"), brick.rect())
+                elif brick.durability() == 2:
+                    pygame.draw.rect(game_background, pygame.Color("#a8a7a7"), brick.rect())
+                elif brick.durability() == 3:
+                    pygame.draw.rect(game_background, pygame.Color("#707070"), brick.rect())
+                """match brick.durability():
                     case 1:
                         pygame.draw.rect(game_background, pygame.Color("#ffffff"), brick.rect())
                     case 2:
                         pygame.draw.rect(game_background, pygame.Color("#a8a7a7"), brick.rect())
                     case 3:
                         pygame.draw.rect(game_background, pygame.Color("#707070"), brick.rect())
+                """
+            if trap.collidelist(bricks_list) == -1:
+                pygame.draw.rect(game_background, "blue", trap)
             for explosion in explosion_trail:
                 if game_window.contains(explosion):
                     pygame.draw.rect(game_background, "orange", explosion)
-            pygame.draw.rect(game_background, "yellow", floor_key)
+            if not key_picked_up:
+                pygame.draw.rect(game_background, "yellow", floor_key)
             pygame.draw.rect(game_background, "green", player)
-            if bomb:
+            for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb)
 
             pygame.display.update()
