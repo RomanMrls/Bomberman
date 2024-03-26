@@ -9,11 +9,15 @@ class Brick:
     def __init__(self, pos, durability):
         # Initialisation d'une brique avec sa position et sa durabilité
         self.__rect = pygame.Rect(pos, brick_size)
+        self.__types = durability
         self.__durability = durability
     
     def rect(self):
         # Renvoie le rectangle représentant la brique
         return self.__rect
+    
+    def types(self):
+        return self.__types
     
     def durability(self):
         return self.__durability
@@ -134,7 +138,7 @@ def relative_pos(relative_rect_size, rect):
     relative_rect_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - relative_rect_size[0] +2)/2, (brick_size[1] - relative_rect_size[1] + 2)/2 ))
     return relative_rect_position
 
-def powerup_appear():
+def powerup_appear(score_number,radius,strenght,piercing,player_speed,bomb_max_number):
     rand = random.random()
     power_up = None
     if rand < 0.2:
@@ -225,9 +229,19 @@ pygame.display.set_caption('Cyberblast 9000')
 screenx = 1000
 screeny = 900
 
-game_background = pygame.image.load("game_background.png")
-menu_background = pygame.image.load("menu_background.png")
-arena_background = pygame.image.load("arena_background.png")
+game_background = pygame.image.load("image/game_background.png")
+menu_background = pygame.image.load("image/menu_background.png")
+arena_background = pygame.image.load("image/arena_background.png")
+key_sprite = pygame.image.load("image/key.png")
+key_sprite.set_colorkey((0, 255, 0))
+trapdoor_sprite = pygame.image.load("image/trapdoor.png")
+brick_1hit_sprite = pygame.image.load("image/1hit_brick.png")
+brick_2hit_1_sprite = pygame.image.load("image/2hit_1_brick.png")
+brick_2hit_2_sprite = pygame.image.load("image/2hit_2_brick.png")
+brick_3hit_1_sprite = pygame.image.load("image/3hit_1_brick.png")
+brick_3hit_2_sprite = pygame.image.load("image/3hit_2_brick.png")
+brick_3hit_3_sprite = pygame.image.load("image/3hit_3_brick.png")
+indestructible_brick_sprite = pygame.image.load("image/indestructible_brick.png")
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -285,7 +299,7 @@ while playing:
                 in_game = True
                 game_over = False
                 score_number = 500
-                floor_number = 1
+                floor_number = 50
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
                 powerup_on_grid = []
@@ -393,26 +407,26 @@ while playing:
             screen.blit(floor, floor_pos)
             game_background.blit(arena_background, game_window_pos)
             for unbreakables_bricks in unbreakables_list:
-                pygame.draw.rect(game_background, "purple", unbreakables_bricks)
+                game_background.blit(indestructible_brick_sprite, unbreakables_bricks)
             for brick in bricks_list:
-                if brick.durability() == 1:
-                    pygame.draw.rect(game_background, pygame.Color("#ffffff"), brick.rect())
-                elif brick.durability() == 2:
-                    pygame.draw.rect(game_background, pygame.Color("#a8a7a7"), brick.rect())
-                elif brick.durability() == 3:
-                    pygame.draw.rect(game_background, pygame.Color("#707070"), brick.rect())
-                """match brick.durability():
-                    case 1:
-                        pygame.draw.rect(game_background, pygame.Color("#ffffff"), brick.rect())
-                    case 2:
-                        pygame.draw.rect(game_background, pygame.Color("#a8a7a7"), brick.rect())
-                    case 3:
-                        pygame.draw.rect(game_background, pygame.Color("#707070"), brick.rect())
-                """
+                if brick.types() == 1 :
+                    game_background.blit(brick_1hit_sprite, brick.rect())
+                elif brick.types() == 2 :
+                    if brick.durability() == 1:
+                        game_background.blit(brick_2hit_1_sprite, brick.rect())
+                    elif brick.durability() == 2:
+                        game_background.blit(brick_2hit_2_sprite, brick.rect())
+                elif brick.types() == 3 :
+                    if brick.durability() == 1:
+                        game_background.blit(brick_3hit_1_sprite, brick.rect())
+                    elif brick.durability() == 2:
+                        game_background.blit(brick_3hit_2_sprite, brick.rect())
+                    elif brick.durability() == 3:
+                        game_background.blit(brick_3hit_3_sprite, brick.rect())
             if trap.collidelist(bricks_list) == -1:
-                pygame.draw.rect(game_background, "blue", trap)
+                game_background.blit(trapdoor_sprite, brick.rect())
             if not key_picked_up:
-                pygame.draw.rect(game_background, "yellow", floor_key)
+                game_background.blit(key_sprite, floor_key)
             for powerup in powerup_on_grid:
                 pygame.draw.rect(game_background, "cyan", powerup.rect())
             pygame.draw.rect(game_background, "green", player)
