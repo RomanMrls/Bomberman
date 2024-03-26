@@ -2,7 +2,6 @@ import pygame
 import sys
 import math
 import random
-from random import randint
 
 # Classes
 
@@ -69,12 +68,16 @@ class Powerup:
 class Bomb:
     def __init__(self, pos):
         self.__rect = pygame.Rect(pos, bomb_size)
+        self.__pos = pos
         self.__timer = 0
         self.__timer_explosion = -1
         self.__explosion_trail = []
         
     def rect(self):
         return self.__rect
+    
+    def get_pos(self):
+        return self.__pos
     
     def timer(self):
         return self.__timer
@@ -182,7 +185,7 @@ def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
 
 def gen_floor(floor_number,player_pos):
     # Génère la structure de l'étage
-    key_grid_pos = (randint(0, 6) * 2, randint(0, 6) * 2)
+    key_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
     key_size = (25,25)
     key_x = margin/2 + game_window_pos.x + (key_grid_pos[0] * (game_size[0]-margin) / 13) + ((game_size[0]-margin) / 13 - key_size[0]) / 2
     key_y = margin/2 + game_window_pos.y + (key_grid_pos[1] * (game_size[1]-margin) / 13) + ((game_size[1]-margin) / 13 - key_size[1]) / 2
@@ -224,7 +227,7 @@ screeny = 900
 
 game_background = pygame.image.load("game_background.png")
 menu_background = pygame.image.load("menu_background.png")
-arena_background = pygame.image.load("arena2_background.png")
+arena_background = pygame.image.load("arena_background.png")
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -312,7 +315,7 @@ while playing:
                     else:
                         game_over, in_game = True, False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number :
+                    if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and bomb_pos() not in [bomb.get_pos() for bomb in bomb_on_grid]:
                         bomb_on_grid.append(Bomb(bomb_pos()))
                     elif event.key in direction:
                         key_pressed_state[event.key] = True
