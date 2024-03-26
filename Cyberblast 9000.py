@@ -30,7 +30,6 @@ class Powerup:
     def __init__(self, pos, powerup_type):
         self.__rect = pygame.Rect(pos, powerup_size)
         self.__powerup_type = powerup_type
-        self.__use_time = 0
              
     def rect(self):
         return self.__rect
@@ -38,11 +37,10 @@ class Powerup:
     def get_powerup_type(self):
         return self.__powerup_type
     
-    def use(self):
-        score -= 10
-        use_time -= 1
+    def use(self,score_number,radius,strenght,piercing,player_speed,bomb_max_number):
+        score_number -= 10
         if self.__powerup_type == "coin" :
-            score += 15
+            score_number += 15
         if self.__powerup_type == "radius_up" :
             radius += 1
         if self.__powerup_type == "radius_down" :
@@ -126,27 +124,29 @@ class Bomb:
     
 # Functions
 
-def bomb_pos():
+def relative_pos(relative_rect_size, rect):
     # Calcule la position de la bombe en fonction de la position du joueur et de la grille
-    player_center = pygame.Vector2(player.center)
-    player_relative_pos = player_center - pygame.Vector2(game_window.topleft)
+    rect_center = pygame.Vector2(rect.center)
+    rect_relative_pos = rect_center - pygame.Vector2(game_window.topleft)
     grid_square_size = pygame.Vector2(brick_size[0] + 2, brick_size[1] + 2)
-    player_relative_grid_pos = player_relative_pos.elementwise() // grid_square_size
-    grid_square_top_left = player_relative_grid_pos.elementwise() * grid_square_size + pygame.Vector2(margin, margin)
-    bomb_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - bomb_size[0] +2)/2, (brick_size[1] - bomb_size[1] + 2)/2 ))
-    return bomb_position
+    rect_relative_grid_pos = rect_relative_pos.elementwise() // grid_square_size
+    grid_square_top_left = rect_relative_grid_pos.elementwise() * grid_square_size + pygame.Vector2(margin, margin)
+    relative_rect_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - relative_rect_size[0] +2)/2, (brick_size[1] - relative_rect_size[1] + 2)/2 ))
+    return relative_rect_position
 
 def powerup_appear():
     rand = random.random()
     power_up = None
-    if rand < 0.05:
+    if rand < 0.2:
         rand_power_up = random.random()
-        if rand_power_up < 0.1:
-            power_up = random.choice(["strenght","piercing"])
+        if rand_power_up < 0.075:
+            power_up = random.choice(["strenght_down", "piercing_down", "radius_down", "speed_down"])
+        elif rand_power_up < 0.1:
+            power_up = random.choice(["bomb_number", "piercing_up"])
         elif rand_power_up < 0.3:
-            power_up = random.choice([])
+            power_up = random.choice(["strenght_up", "radius_up"])
         elif rand_power_up < 0.5:
-            power_up = random.choice([])
+            power_up = "speed_up"
         else:
             power_up = "coin"
     return power_up
@@ -288,6 +288,7 @@ while playing:
                 floor_number = 1
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
+                powerup_on_grid = []
                 bomb_on_grid = []
                 bomb_max_number = 3
                 explosion_on_grid = []
@@ -315,8 +316,8 @@ while playing:
                     else:
                         game_over, in_game = True, False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and bomb_pos() not in [bomb.get_pos() for bomb in bomb_on_grid]:
-                        bomb_on_grid.append(Bomb(bomb_pos()))
+                    if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and relative_pos(bomb_size, player) not in [bomb.get_pos() for bomb in bomb_on_grid]:
+                        bomb_on_grid.append(Bomb(relative_pos(bomb_size, player)))
                     elif event.key in direction:
                         key_pressed_state[event.key] = True
                 elif event.type == pygame.KEYUP:
@@ -350,6 +351,9 @@ while playing:
                 if bomb.explosion_timer() >= 0.5:
                     for brick in bricks_list:
                         if brick.is_destroyed():
+                            powerup = powerup_appear(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+                            if powerup != None:
+                                powerup_on_grid.append(Powerup(relative_pos(powerup_size,brick.rect()), powerup))
                             bricks_list.remove(brick)
                     bomb_on_grid.remove(bomb)
             
@@ -363,7 +367,11 @@ while playing:
             for bomb in bomb_on_grid:
                 if player.collidelistall(bomb.get_explosion_trail()):
                     game_over, in_game = True, False
-
+            for powerup in powerup_on_grid:
+                if player.colliderect(powerup):
+                    powerup.use()
+                    powerup_on_grid.remove(powerup)
+                    
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
             score_center_point = (screenx // 2, 75 // 2)
@@ -405,6 +413,8 @@ while playing:
                 pygame.draw.rect(game_background, "blue", trap)
             if not key_picked_up:
                 pygame.draw.rect(game_background, "yellow", floor_key)
+            for powerup in powerup_on_grid:
+                pygame.draw.rect(game_background, "cyan", powerup.rect())
             pygame.draw.rect(game_background, "green", player)
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
