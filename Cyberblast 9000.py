@@ -271,7 +271,7 @@ unbreakables_pos_list = sum(unbreakables_pos_list, [])
 unbreakables_list = [pygame.Rect(pos, brick_size) for pos in unbreakables_pos_list]
 
 clock = pygame.time.Clock()
-clock.tick(165)
+clock.tick(60)
 
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
@@ -383,7 +383,7 @@ while playing:
                     game_over, in_game = True, False
             for powerup in powerup_on_grid:
                 if player.colliderect(powerup):
-                    powerup.use()
+                    powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
                     powerup_on_grid.remove(powerup)
                     
             score = police.render(str(score_number), True, (255, 255, 255))
@@ -436,6 +436,7 @@ while playing:
                     if game_window.contains(explosion):
                         pygame.draw.rect(game_background, "orange", explosion)
             pygame.display.update()
+            clock.tick(90)
 
     dt = round((clock.tick(60) / 1000) , 2)
 
