@@ -314,10 +314,7 @@ while playing:
             elif exit_button.collidepoint(pygame.mouse.get_pos()):
                 playing = False
                 
-        title = title_police.render("Cyberblast 9000", True, (255, 255, 255))
-        title_rect = title.get_rect()
         screen.blit(menu_background, (0, 0))
-        screen.blit(title, (screenx / 2 - title_rect.centerx, screeny / 5 - title_rect.centery))
         pygame.draw.rect(menu_background, "black", play_button)
         pygame.draw.rect(menu_background, "black", info_button)
         pygame.draw.rect(menu_background, "black", exit_button)
