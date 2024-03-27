@@ -43,6 +43,7 @@ class Powerup:
     
     def use(self,score_number,radius,strenght,piercing,player_speed,bomb_max_number):
         score_number -= 10
+        print(self.__powerup_type)
         if self.__powerup_type == "coin" :
             score_number += 15
         if self.__powerup_type == "radius_up" :
@@ -300,14 +301,15 @@ while playing:
                 in_game = True
                 game_over = False
                 score_number = 500
-                floor_number = 50
+                floor_number = 1
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
                 powerup_on_grid = []
                 bomb_on_grid = []
-                bomb_max_number = 3
+                bomb_max_number = 1
                 explosion_on_grid = []
                 trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
+                keys = [floor_key]
                 player.topleft = player_starting_pos
                 radius, piercing, strenght = 2,1,1
                     
@@ -368,13 +370,16 @@ while playing:
                                 powerup_on_grid.append(Powerup(relative_pos(powerup_size,brick.rect()), powerup))
                             bricks_list.remove(brick)
                     bomb_on_grid.remove(bomb)
-            
-            if player.colliderect(floor_key):
-                key_picked_up = True
+            for floor_keys in keys :
+                if player.colliderect(floor_key):
+                    keys.remove(floor_key)
+                    key_picked_up = True
+                    score_number += 10
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
                 score_number += 100
                 trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
+                keys = [floor_key]
                 timer_counter = floor_timer(floor_number)
             for bomb in bomb_on_grid:
                 if player.collidelistall(bomb.get_explosion_trail()):
