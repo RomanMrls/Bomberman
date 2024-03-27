@@ -67,6 +67,7 @@ class Powerup:
             player_speed -= 10
         if self.__powerup_type == "bomb_number" :
             bomb_max_number += 1
+        return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
             
 class Bomb:
     def __init__(self, pos):
@@ -243,6 +244,7 @@ brick_3hit_1_sprite = pygame.image.load("image/3hit_1_brick.png")
 brick_3hit_2_sprite = pygame.image.load("image/3hit_2_brick.png")
 brick_3hit_3_sprite = pygame.image.load("image/3hit_3_brick.png")
 indestructible_brick_sprite = pygame.image.load("image/indestructible_brick.png")
+item_sprite = pygame.image.load("image/item_sprite.png")
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -309,7 +311,6 @@ while playing:
                 bomb_max_number = 1
                 explosion_on_grid = []
                 trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
-                keys = [floor_key]
                 player.topleft = player_starting_pos
                 radius, piercing, strenght = 2,1,1
                     
@@ -370,23 +371,21 @@ while playing:
                                 powerup_on_grid.append(Powerup(relative_pos(powerup_size,brick.rect()), powerup))
                             bricks_list.remove(brick)
                     bomb_on_grid.remove(bomb)
-            for floor_keys in keys :
-                if player.colliderect(floor_key):
-                    keys.remove(floor_key)
-                    key_picked_up = True
-                    score_number += 10
+            if player.colliderect(floor_key):
+                floor_key.update(0,0,0,0)
+                key_picked_up = True
+                score_number += 10
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
                 score_number += 100
                 trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
-                keys = [floor_key]
                 timer_counter = floor_timer(floor_number)
             for bomb in bomb_on_grid:
                 if player.collidelistall(bomb.get_explosion_trail()):
                     game_over, in_game = True, False
             for powerup in powerup_on_grid:
                 if player.colliderect(powerup):
-                    powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+                    score_number,radius,strenght,piercing,player_speed,bomb_max_number = powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
                     powerup_on_grid.remove(powerup)
                     
             score = police.render(str(score_number), True, (255, 255, 255))
@@ -403,7 +402,6 @@ while playing:
             floor_rect = floor.get_rect()
             floor_center_point = (screenx-145 , 75 // 2)
             floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
-
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
             screen.blit(timer, timer_pos)
@@ -431,7 +429,7 @@ while playing:
             if not key_picked_up:
                 game_background.blit(key_sprite, floor_key)
             for powerup in powerup_on_grid:
-                pygame.draw.rect(game_background, "cyan", powerup.rect())
+                game_background.blit(item_sprite, powerup.rect())
             pygame.draw.rect(game_background, "green", player)
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
