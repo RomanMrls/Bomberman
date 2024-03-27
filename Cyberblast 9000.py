@@ -270,8 +270,9 @@ unbreakables_pos_list = sum(unbreakables_pos_list, [])
 
 unbreakables_list = [pygame.Rect(pos, brick_size) for pos in unbreakables_pos_list]
 
+FPS = 60
 clock = pygame.time.Clock()
-clock.tick(60)
+clock.tick(FPS)
 
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
@@ -436,9 +437,9 @@ while playing:
                     if game_window.contains(explosion):
                         pygame.draw.rect(game_background, "orange", explosion)
             pygame.display.update()
-            clock.tick(90)
+            clock.tick(FPS)
 
-    dt = round((clock.tick(60) / 1000) , 2)
+    dt = round((clock.tick(FPS) / 1000) , 2)
 
 pygame.quit()
 sys.exit()
