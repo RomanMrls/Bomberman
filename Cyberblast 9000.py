@@ -127,7 +127,18 @@ class Bomb:
                 
     def get_explosion_trail(self):
         return self.__explosion_trail
+
+class Perso :
+    def __init__(self,classe,pos) :
+        self.__class = classe
+        self.__rect = pygame.Rect(pos, player_size)
+        self.__effect = None
+        self.__timer_effect = 0
+        self.__timer_capa = 0
     
+    def get_rect(self) :
+        return self.__rect
+
 # Functions
 
 def relative_pos(relative_rect_size, rect):
@@ -256,9 +267,12 @@ game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_s
 game_window = pygame.Rect(game_window_pos, game_size)
 margin = 9/2
 
-player_size = (50, 50)
+
 player_starting_pos = pygame.Vector2(game_window_pos)
-player = pygame.Rect(player_starting_pos, player_size)
+player_size = (50, 50)
+classe = 'Basic'
+player_obj = Perso(classe,player_starting_pos)
+player =  player_obj.get_rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
@@ -328,6 +342,7 @@ while playing:
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
                         timer_counter -= 1
+                        score_number -= 1
                     else:
                         game_over, in_game = True, False
                 elif event.type == pygame.KEYDOWN:
@@ -377,7 +392,7 @@ while playing:
                 score_number += 10
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
-                score_number += 100
+                score_number += 1000
                 trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
                 timer_counter = floor_timer(floor_number)
             for bomb in bomb_on_grid:
