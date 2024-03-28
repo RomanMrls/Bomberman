@@ -34,9 +34,16 @@ class Powerup:
     def __init__(self, pos, powerup_type):
         self.__rect = pygame.Rect(pos, powerup_size)
         self.__powerup_type = powerup_type
+        self.__timer = 0
              
     def rect(self):
         return self.__rect
+    
+    def timer(self):
+        return self.__timer
+        
+    def timer_increment(self):
+        self.__timer += dt
     
     def get_powerup_type(self):
         return self.__powerup_type
@@ -92,7 +99,6 @@ class Bomb:
     def explosion_timer_start(self):
         self.__timer_explosion = 0
         self.__timer = -1
-        self.__rect = pygame.Rect(0,0,0,0)
     
     def explosion_timer(self):
         return self.__timer_explosion
@@ -151,10 +157,10 @@ def relative_pos(relative_rect_size, rect):
     relative_rect_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - relative_rect_size[0] +2)/2, (brick_size[1] - relative_rect_size[1] + 2)/2 ))
     return relative_rect_position
 
-def powerup_appear(score_number,radius,strenght,piercing,player_speed,bomb_max_number):
+def powerup_appear():
     rand = random.random()
     power_up = None
-    if rand < 0.2:
+    if rand < 0.05:
         rand_power_up = random.random()
         if rand_power_up < 0.075:
             power_up = random.choice(["strenght_down", "piercing_down", "radius_down", "speed_down"])
@@ -242,6 +248,9 @@ pygame.display.set_caption('Cyberblast 9000')
 screenx = 1000
 screeny = 900
 
+screen_shade = pygame.Surface((screenx,screeny)).convert_alpha()
+screen_shade.fill((0,0,0,30))
+
 game_background = pygame.image.load("image/game_background.png")
 menu_background = pygame.image.load("image/menu_background.png")
 arena_background = pygame.image.load("image/arena_background.png")
@@ -294,7 +303,7 @@ clock.tick(FPS)
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
 police = pygame.font.SysFont('chalkduster.ttf', 40)
-title_police = pygame.font.SysFont('chalkduster.ttf', 130)
+game_over_police = pygame.font.SysFont('chalkduster.ttf', 700)
 
 key_pressed_state = {}
 
@@ -342,7 +351,6 @@ while playing:
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
                         timer_counter -= 1
-                        score_number -= 1
                     else:
                         game_over, in_game = True, False
                 elif event.type == pygame.KEYDOWN:
@@ -381,11 +389,18 @@ while playing:
                 if bomb.explosion_timer() >= 0.5:
                     for brick in bricks_list:
                         if brick.is_destroyed():
-                            powerup = powerup_appear(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+                            powerup = powerup_appear()
                             if powerup != None:
-                                powerup_on_grid.append(Powerup(relative_pos(powerup_size,brick.rect()), powerup))
+                                powerup_on_grid.append(Powerup(relative_pos(powerup_size, brick.rect()), powerup))
                             bricks_list.remove(brick)
                     bomb_on_grid.remove(bomb)
+                    
+            for powerup in powerup_on_grid:
+                if powerup.timer() >= 0:
+                    powerup.timer_increment()
+                if powerup.timer() >= 5:
+                    powerup_on_grid.remove(powerup)
+            
             if player.colliderect(floor_key):
                 floor_key.update(0,0,0,0)
                 key_picked_up = True
@@ -405,17 +420,17 @@ while playing:
                     
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
-            score_center_point = (screenx // 2, 75 // 2)
+            score_center_point = (screenx // 2, 67.5 // 2)
             score_pos = (score_center_point[0] - score_rect.width // 2, score_center_point[1] - score_rect.height // 2)
 
             timer = police.render(timer_str(timer_counter), True, (255, 255, 255))
             timer_rect = timer.get_rect()
-            timer_center_point = (92.5, 75 // 2)
+            timer_center_point = (92.5, 67.5 // 2)
             timer_pos = (timer_center_point[0] - timer_rect.width // 2, timer_center_point[1] - timer_rect.height // 2)
 
             floor = police.render(f"Floor : {floor_number}", True, (255, 255, 255))
             floor_rect = floor.get_rect()
-            floor_center_point = (screenx-145 , 75 // 2)
+            floor_center_point = (screenx-145 , 67.5 // 2)
             floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
@@ -439,8 +454,8 @@ while playing:
                         game_background.blit(brick_3hit_2_sprite, brick.rect())
                     elif brick.durability() == 3:
                         game_background.blit(brick_3hit_3_sprite, brick.rect())
-            if trap.collidelist(bricks_list) == -1:
-                game_background.blit(trapdoor_sprite, brick.rect())
+            if not trap.collidelistall(bricks_list):
+                game_background.blit(trapdoor_sprite, trap)
             if not key_picked_up:
                 game_background.blit(key_sprite, floor_key)
             for powerup in powerup_on_grid:
@@ -453,8 +468,16 @@ while playing:
                         pygame.draw.rect(game_background, "orange", explosion)
             pygame.display.update()
             clock.tick(FPS)
+            
+            if game_over:
+                game_over_text = police.render("GAME OVER !", True, "green")
+                game_over_text_rect = game_over_text.get_rect()
+                screen.blit(screen_shade,(0,0))
+                screen.blit(game_over_text, (screenx/2 - game_over_text_rect.width // 2, screeny/2 - game_over_text_rect.height // 2))
+                pygame.display.update()
+                pygame.time.wait(3000)
 
-    dt = round((clock.tick(FPS) / 1000) , 2)
+    dt = clock.tick(FPS) / 1000
 
 pygame.quit()
 sys.exit()
