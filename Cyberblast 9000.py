@@ -107,7 +107,7 @@ class Bomb:
         self.__timer_explosion += dt
         
     def explosion(self, bricks_list, radius, piercing, strenght):
-        explosion_size = (57, 57)
+        #explosion_size = (57, 57)
         self.__explosion_trail.append(pygame.Rect(self.__rect.centerx - explosion_size[0] // 2, self.__rect.centery - explosion_size[1] // 2, explosion_size[0], explosion_size[1]))
         for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
             for i in range(1, radius):
@@ -251,11 +251,12 @@ screeny = 900
 screen_shade = pygame.Surface((screenx,screeny)).convert_alpha()
 screen_shade.fill((0,0,0,30))
 
+
 game_background = pygame.image.load("image/game_background.png")
 menu_background = pygame.image.load("image/menu_background.png")
 arena_background = pygame.image.load("image/arena_background.png")
 key_sprite = pygame.image.load("image/key.png")
-key_sprite.set_colorkey((0, 255, 0))
+key_sprite.set_colorkey((0, 0, 255))
 trapdoor_sprite = pygame.image.load("image/trapdoor.png")
 brick_1hit_sprite = pygame.image.load("image/1hit_brick.png")
 brick_2hit_1_sprite = pygame.image.load("image/2hit_1_brick.png")
@@ -264,7 +265,12 @@ brick_3hit_1_sprite = pygame.image.load("image/3hit_1_brick.png")
 brick_3hit_2_sprite = pygame.image.load("image/3hit_2_brick.png")
 brick_3hit_3_sprite = pygame.image.load("image/3hit_3_brick.png")
 indestructible_brick_sprite = pygame.image.load("image/indestructible_brick.png")
-item_sprite = pygame.image.load("image/item_sprite.png")
+item_sprite = pygame.image.load("image/rangeup_sprite.png")
+center_explosion_sprite = pygame.image.load("image/explosion_sprite0.png")
+horizontal_explosion_sprite = pygame.image.load("image/explosion_sprite2.png")
+vertical_explosion_sprite = pygame.image.load("image/explosion_sprite1.png")
+bouton_sprite = pygame.image.load("image/bouton.png")
+
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -285,9 +291,10 @@ player =  player_obj.get_rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
+explosion_size = (57, 57)
 bomb_size = (25,25)
 key_size = (25,25)
-powerup_size = (20,20)
+powerup_size = (21,21)
 key_picked_up = False
 
 brick_size = (55, 55)
@@ -326,7 +333,7 @@ while playing:
                 in_game = True
                 game_over = False
                 score_number = 500
-                floor_number = 1
+                floor_number = 20
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
                 powerup_on_grid = []
@@ -341,9 +348,9 @@ while playing:
                 playing = False
                 
         screen.blit(menu_background, (0, 0))
-        pygame.draw.rect(menu_background, "black", play_button)
-        pygame.draw.rect(menu_background, "black", info_button)
-        pygame.draw.rect(menu_background, "black", exit_button)
+        screen.blit(bouton_sprite, play_button)
+        screen.blit(bouton_sprite, info_button)
+        screen.blit(bouton_sprite, exit_button)
         pygame.display.update()
     else:
         while not game_over:
@@ -464,8 +471,15 @@ while playing:
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
                 for explosion in bomb.get_explosion_trail():
+                    diff = (explosion_size[0]-bomb_size[0])//2
                     if game_window.contains(explosion):
-                        pygame.draw.rect(game_background, "orange", explosion)
+                        if bomb.rect()[0] == explosion[0]+diff :
+                            if bomb.rect()[1] == explosion[1]+diff :
+                                game_background.blit(center_explosion_sprite, explosion)
+                            else :
+                                game_background.blit(vertical_explosion_sprite, explosion)
+                        else :
+                            game_background.blit(horizontal_explosion_sprite, explosion)
             pygame.display.update()
             clock.tick(FPS)
             
