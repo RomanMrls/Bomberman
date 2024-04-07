@@ -75,6 +75,28 @@ class Powerup:
         if self.__powerup_type == "bomb_number" :
             bomb_max_number += 1
         return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+    
+    def sprite(self) :
+        if self.__powerup_type == "coin" :
+            return good_item_sprite
+        if self.__powerup_type == "radius_up" :
+            return rangeup_sprite
+        if self.__powerup_type == "radius_down" :
+            return bad_item_sprite
+        if self.__powerup_type == "strenght_up" :
+            return strenghtup_sprite
+        if self.__powerup_type == "strenght_down" :
+            return bad_item_sprite
+        if self.__powerup_type == "piercing_up" :
+            return good_item_sprite
+        if self.__powerup_type == "piercing_down" :
+            return bad_item_sprite
+        if self.__powerup_type == "speed_up" :
+            return speedup_sprite
+        if self.__powerup_type == "speed_down":
+            return bad_item_sprite
+        if self.__powerup_type == "bomb_number" :
+            return good_item_sprite
             
 class Bomb:
     def __init__(self, pos):
@@ -265,11 +287,18 @@ brick_3hit_1_sprite = pygame.image.load("image/3hit_1_brick.png")
 brick_3hit_2_sprite = pygame.image.load("image/3hit_2_brick.png")
 brick_3hit_3_sprite = pygame.image.load("image/3hit_3_brick.png")
 indestructible_brick_sprite = pygame.image.load("image/indestructible_brick.png")
-item_sprite = pygame.image.load("image/rangeup_sprite.png")
+good_item_sprite = pygame.image.load("image/good_item_sprite.png")
+bad_item_sprite = pygame.image.load("image/bad_item_sprite.png")
+rangeup_sprite = pygame.image.load("image/rangeup_sprite.png")
+strenghtup_sprite = pygame.image.load("image/strenghtup_sprite.png")
+speedup_sprite = pygame.image.load("image/speedup_sprite.png")
+#shield_sprite = pygame.image.load("image/shield_sprite.png")
 center_explosion_sprite = pygame.image.load("image/explosion_sprite0.png")
 horizontal_explosion_sprite = pygame.image.load("image/explosion_sprite2.png")
 vertical_explosion_sprite = pygame.image.load("image/explosion_sprite1.png")
-bouton_sprite = pygame.image.load("image/bouton.png")
+playbouton_sprite = pygame.image.load("image/play_bouton.png")
+extrabouton_sprite = pygame.image.load("image/extra_bouton.png")
+quitbouton_sprite = pygame.image.load("image/quit_bouton.png")
 
 
 button_size = (500,100)
@@ -348,9 +377,9 @@ while playing:
                 playing = False
                 
         screen.blit(menu_background, (0, 0))
-        screen.blit(bouton_sprite, play_button)
-        screen.blit(bouton_sprite, info_button)
-        screen.blit(bouton_sprite, exit_button)
+        screen.blit(playbouton_sprite, play_button)
+        screen.blit(extrabouton_sprite, info_button)
+        screen.blit(quitbouton_sprite, exit_button)
         pygame.display.update()
     else:
         while not game_over:
@@ -466,7 +495,7 @@ while playing:
             if not key_picked_up:
                 game_background.blit(key_sprite, floor_key)
             for powerup in powerup_on_grid:
-                game_background.blit(item_sprite, powerup.rect())
+                game_background.blit(powerup.sprite(), powerup.rect())
             pygame.draw.rect(game_background, "green", player)
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
