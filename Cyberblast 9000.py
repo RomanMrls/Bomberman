@@ -1,7 +1,8 @@
-import pygame
 import sys
+import pygame
 import math
 import random
+import os
 
 # Classes
 
@@ -97,6 +98,7 @@ class Powerup:
             return bad_item_sprite
         if self.__powerup_type == "bomb_number" :
             return good_item_sprite
+    
             
 class Bomb:
     def __init__(self, pos):
@@ -129,7 +131,6 @@ class Bomb:
         self.__timer_explosion += dt
         
     def explosion(self, bricks_list, radius, piercing, strenght):
-        #explosion_size = (57, 57)
         self.__explosion_trail.append(pygame.Rect(self.__rect.centerx - explosion_size[0] // 2, self.__rect.centery - explosion_size[1] // 2, explosion_size[0], explosion_size[1]))
         for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
             for i in range(1, radius):
@@ -273,33 +274,34 @@ screeny = 900
 screen_shade = pygame.Surface((screenx,screeny)).convert_alpha()
 screen_shade.fill((0,0,0,30))
 
+current_dir = os.path.dirname(__file__)
 
-game_background = pygame.image.load("image/game_background.png")
-menu_background = pygame.image.load("image/menu_background.png")
-arena_background = pygame.image.load("image/arena_background.png")
-key_sprite = pygame.image.load("image/key.png")
+game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
+menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png"))
+arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png"))
+key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png"))
 key_sprite.set_colorkey((0, 0, 255))
-trapdoor_sprite = pygame.image.load("image/trapdoor.png")
-brick_1hit_sprite = pygame.image.load("image/1hit_brick.png")
-brick_2hit_1_sprite = pygame.image.load("image/2hit_1_brick.png")
-brick_2hit_2_sprite = pygame.image.load("image/2hit_2_brick.png")
-brick_3hit_1_sprite = pygame.image.load("image/3hit_1_brick.png")
-brick_3hit_2_sprite = pygame.image.load("image/3hit_2_brick.png")
-brick_3hit_3_sprite = pygame.image.load("image/3hit_3_brick.png")
-indestructible_brick_sprite = pygame.image.load("image/indestructible_brick.png")
-good_item_sprite = pygame.image.load("image/good_item_sprite.png")
-bad_item_sprite = pygame.image.load("image/bad_item_sprite.png")
-rangeup_sprite = pygame.image.load("image/rangeup_sprite.png")
-strenghtup_sprite = pygame.image.load("image/strenghtup_sprite.png")
-speedup_sprite = pygame.image.load("image/speedup_sprite.png")
-#shield_sprite = pygame.image.load("image/shield_sprite.png")
-center_explosion_sprite = pygame.image.load("image/explosion_sprite0.png")
-horizontal_explosion_sprite = pygame.image.load("image/explosion_sprite2.png")
-vertical_explosion_sprite = pygame.image.load("image/explosion_sprite1.png")
-playbouton_sprite = pygame.image.load("image/play_bouton.png")
-extrabouton_sprite = pygame.image.load("image/extra_bouton.png")
-quitbouton_sprite = pygame.image.load("image/quit_bouton.png")
+trapdoor_sprite = pygame.image.load(os.path.join(current_dir, "image/trapdoor.png"))
+brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/1hit_brick.png"))
+brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_1_brick.png"))
+brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_2_brick.png"))
+brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_1_brick.png"))
+brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_brick.png"))
+brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png"))
+indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png"))
+center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png"))
+horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png"))
+vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png"))
+good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png"))
+bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png"))
+rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png"))
+strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png"))
+speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png"))
+#shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png"))
 
+playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png"))
+extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png"))
+quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bouton.png"))
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -320,7 +322,7 @@ player =  player_obj.get_rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
-explosion_size = (57, 57)
+explosion_size = (57,57)
 bomb_size = (25,25)
 key_size = (25,25)
 powerup_size = (21,21)
@@ -338,8 +340,8 @@ clock.tick(FPS)
 
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
-police = pygame.font.SysFont('chalkduster.ttf', 40)
-game_over_police = pygame.font.SysFont('chalkduster.ttf', 700)
+police = pygame.font.SysFont('PressStart2P.ttf', 40)
+game_over_police = pygame.font.SysFont('PressStart2P.ttf', 700)
 
 key_pressed_state = {}
 
@@ -362,7 +364,7 @@ while playing:
                 in_game = True
                 game_over = False
                 score_number = 500
-                floor_number = 20
+                floor_number = 1
                 timer_counter = floor_timer(floor_number)
                 key_pressed_state = {}
                 powerup_on_grid = []
