@@ -58,7 +58,6 @@ class Powerup:
     
     def use(self,score_number,radius,strenght,piercing,player_speed,bomb_max_number):
         score_number -= 10
-        print(self.__powerup_type)
         if not self.__effect:
             if self.__powerup_type == "coin" :
                 score_number += 15
@@ -78,9 +77,9 @@ class Powerup:
                 if piercing > 1:
                     piercing -= 1
             elif self.__powerup_type == "speed_up" :
-                player_speed += 10
+                player_speed += 25
             elif self.__powerup_type == "speed_down":
-                player_speed -= 10
+                player_speed -= 25
             elif self.__powerup_type == "bomb_number" :
                 bomb_max_number += 1
             return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
@@ -107,7 +106,7 @@ class Powerup:
         elif self.__powerup_type == "bomb_number" :
             return good_item_sprite
         elif self.__powerup_type == "shield":
-            return good_item_sprite
+            return shield_sprite
         elif self.__powerup_type == "poison":
             return bad_item_sprite
            
@@ -209,7 +208,6 @@ def relative_pos(relative_rect_size, rect):
     return relative_rect_position
 
 def powerup_appear():
-    """
     rand = random.random()
     power_up = None
     if rand < 0.05:
@@ -227,8 +225,6 @@ def powerup_appear():
         else:
             power_up = "coin"
     return power_up
-    """
-    return "shield"
 
 def brick_number(floor_number):
     min_bricks = floor_number+floor_number//15
@@ -330,7 +326,7 @@ bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sp
 rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png"))
 strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png"))
 speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png"))
-#shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png"))
+shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png"))
 
 playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png"))
 extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png"))
@@ -373,8 +369,8 @@ clock.tick(FPS)
 
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
-police = pygame.font.SysFont('PressStart2P.ttf', 40)
-game_over_police = pygame.font.SysFont('PressStart2P.ttf', 700)
+police = pygame.font.Font('PressStart2P.ttf', 16)
+game_over_police = pygame.font.Font('PressStart2P.ttf', 75)
 
 key_pressed_state = {}
 
@@ -406,6 +402,7 @@ while playing:
                 explosion_on_grid = []
                 trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
                 player.topleft = player_starting_pos
+                player_speed, speed_malus = 200, 200
                 radius, piercing, strenght = 2,1,1
                     
             elif exit_button.collidepoint(pygame.mouse.get_pos()):
@@ -432,14 +429,13 @@ while playing:
                 elif event.type == pygame.KEYUP:
                      key_pressed_state[event.key] = False
 
-            player_speed = 200
             player_velocity = pygame.Vector2(0, 0)
             for key, state in key_pressed_state.items():
                 if state and key in direction:
                     if key in [pygame.K_LEFT, pygame.K_RIGHT]:
-                        player_velocity.x += direction[key][0] * player_speed * dt
+                        player_velocity.x += direction[key][0] * min(speed_malus, player_speed) * dt
                     elif key in [pygame.K_UP, pygame.K_DOWN]:
-                        player_velocity.y += direction[key][1] * player_speed * dt
+                        player_velocity.y += direction[key][1] * min(speed_malus, player_speed) * dt
 
             temp_player = player.move(player_velocity.x, 0)
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+[brick.rect() for brick in bricks_list]) == []:
@@ -477,8 +473,10 @@ while playing:
                     
             if player_obj.get_timer_effect() >= 0:
                 player_obj.timer_effect_increment()
+                speed_malus = 150
             if player_obj.get_timer_effect() >= 5:
                 player_obj.reset_effect()
+                speed_malus = player_speed
             
             if player.colliderect(floor_key):
                 floor_key.update(0,0,0,0)
@@ -511,7 +509,7 @@ while playing:
             timer_center_point = (92.5, 67.5 // 2)
             timer_pos = (timer_center_point[0] - timer_rect.width // 2, timer_center_point[1] - timer_rect.height // 2)
 
-            floor = police.render(f"Floor : {floor_number}", True, (255, 255, 255))
+            floor = police.render(f"Floor:{floor_number}", True, (255, 255, 255))
             floor_rect = floor.get_rect()
             floor_center_point = (screenx-145 , 67.5 // 2)
             floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
@@ -565,7 +563,7 @@ while playing:
             clock.tick(FPS)
             
             if game_over:
-                game_over_text = police.render("GAME OVER !", True, "green")
+                game_over_text = game_over_police.render("GAME OVER !", True, "green")
                 game_over_text_rect = game_over_text.get_rect()
                 screen.blit(screen_shade,(0,0))
                 screen.blit(game_over_text, (screenx/2 - game_over_text_rect.width // 2, screeny/2 - game_over_text_rect.height // 2))
