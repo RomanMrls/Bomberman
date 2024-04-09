@@ -34,11 +34,18 @@ class Brick:
 class Powerup:
     def __init__(self, pos, powerup_type):
         self.__rect = pygame.Rect(pos, powerup_size)
+        if powerup_type in ["shield","poison"]:
+            self.__effect = True
+        else:
+            self.__effect = False
         self.__powerup_type = powerup_type
         self.__timer = 0
              
     def rect(self):
         return self.__rect
+    
+    def is_effect(self):
+        return self.__effect
     
     def timer(self):
         return self.__timer
@@ -52,54 +59,58 @@ class Powerup:
     def use(self,score_number,radius,strenght,piercing,player_speed,bomb_max_number):
         score_number -= 10
         print(self.__powerup_type)
-        if self.__powerup_type == "coin" :
-            score_number += 15
-        if self.__powerup_type == "radius_up" :
-            radius += 1
-        if self.__powerup_type == "radius_down" :
-            if radius > 2:
-                radius -= 1
-        if self.__powerup_type == "strenght_up" :
-            strenght += 1
-        if self.__powerup_type == "strenght_down" :
-            if strenght > 1:
-                strenght -= 1
-        if self.__powerup_type == "piercing_up" :
-            piercing += 1
-        if self.__powerup_type == "piercing_down" :
-            if piercing > 1:
-                piercing -= 1
-        if self.__powerup_type == "speed_up" :
-            player_speed += 10
-        if self.__powerup_type == "speed_down":
-            player_speed -= 10
-        if self.__powerup_type == "bomb_number" :
-            bomb_max_number += 1
-        return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+        if not self.__effect:
+            if self.__powerup_type == "coin" :
+                score_number += 15
+            elif self.__powerup_type == "radius_up" :
+                radius += 1
+            elif self.__powerup_type == "radius_down" :
+                if radius > 2:
+                    radius -= 1
+            elif self.__powerup_type == "strenght_up" :
+                strenght += 1
+            elif self.__powerup_type == "strenght_down" :
+                if strenght > 1:
+                    strenght -= 1
+            elif self.__powerup_type == "piercing_up" :
+                piercing += 1
+            elif self.__powerup_type == "piercing_down" :
+                if piercing > 1:
+                    piercing -= 1
+            elif self.__powerup_type == "speed_up" :
+                player_speed += 10
+            elif self.__powerup_type == "speed_down":
+                player_speed -= 10
+            elif self.__powerup_type == "bomb_number" :
+                bomb_max_number += 1
+            return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
     
     def sprite(self) :
         if self.__powerup_type == "coin" :
             return good_item_sprite
-        if self.__powerup_type == "radius_up" :
+        elif self.__powerup_type == "radius_up" :
             return rangeup_sprite
-        if self.__powerup_type == "radius_down" :
+        elif self.__powerup_type == "radius_down" :
             return bad_item_sprite
-        if self.__powerup_type == "strenght_up" :
+        elif self.__powerup_type == "strenght_up" :
             return strenghtup_sprite
-        if self.__powerup_type == "strenght_down" :
+        elif self.__powerup_type == "strenght_down" :
             return bad_item_sprite
-        if self.__powerup_type == "piercing_up" :
+        elif self.__powerup_type == "piercing_up" :
             return good_item_sprite
-        if self.__powerup_type == "piercing_down" :
+        elif self.__powerup_type == "piercing_down" :
             return bad_item_sprite
-        if self.__powerup_type == "speed_up" :
+        elif self.__powerup_type == "speed_up" :
             return speedup_sprite
-        if self.__powerup_type == "speed_down":
+        elif self.__powerup_type == "speed_down":
             return bad_item_sprite
-        if self.__powerup_type == "bomb_number" :
+        elif self.__powerup_type == "bomb_number" :
             return good_item_sprite
-    
-            
+        elif self.__powerup_type == "shield":
+            return good_item_sprite
+        elif self.__powerup_type == "poison":
+            return bad_item_sprite
+           
 class Bomb:
     def __init__(self, pos):
         self.__rect = pygame.Rect(pos, bomb_size)
@@ -162,8 +173,25 @@ class Perso :
         self.__class = classe
         self.__rect = pygame.Rect(pos, player_size)
         self.__effect = None
+        self.__timer_effect = -1
+        self.__timer_capa = -1
+    
+    def give_effect(self,effect):
+        self.__effect = effect
         self.__timer_effect = 0
-        self.__timer_capa = 0
+        
+    def reset_effect(self):
+        self.__effect = None
+        self.__timer_effect = -1
+        
+    def timer_effect_increment(self):
+        self.__timer_effect += dt
+        
+    def get_timer_effect(self):
+        return self.__timer_effect
+    
+    def get_effect(self):
+        return self.__effect
     
     def get_rect(self) :
         return self.__rect
@@ -181,6 +209,7 @@ def relative_pos(relative_rect_size, rect):
     return relative_rect_position
 
 def powerup_appear():
+    """
     rand = random.random()
     power_up = None
     if rand < 0.05:
@@ -189,6 +218,8 @@ def powerup_appear():
             power_up = random.choice(["strenght_down", "piercing_down", "radius_down", "speed_down"])
         elif rand_power_up < 0.1:
             power_up = random.choice(["bomb_number", "piercing_up"])
+        elif rand_power_up < 0.2:
+            power_up = random.choice(["shield", "poison"])
         elif rand_power_up < 0.3:
             power_up = random.choice(["strenght_up", "radius_up"])
         elif rand_power_up < 0.5:
@@ -196,6 +227,8 @@ def powerup_appear():
         else:
             power_up = "coin"
     return power_up
+    """
+    return "shield"
 
 def brick_number(floor_number):
     min_bricks = floor_number+floor_number//15
@@ -420,7 +453,10 @@ while playing:
                 if bomb.timer() >= 0:
                     bomb.timer_increment()
                 if bomb.timer() >= 1.5:
-                    bomb.explosion(bricks_list, radius, piercing, strenght)
+                    if player_obj.get_effect() == "poison" :
+                        bomb.explosion(bricks_list, 2, 1, 1)
+                    else:
+                        bomb.explosion(bricks_list, radius, piercing, strenght)
                     bomb.explosion_timer_start()
                 if bomb.explosion_timer() >= 0:
                     bomb.explosion_timer_increment()
@@ -438,6 +474,11 @@ while playing:
                     powerup.timer_increment()
                 if powerup.timer() >= 5:
                     powerup_on_grid.remove(powerup)
+                    
+            if player_obj.get_timer_effect() >= 0:
+                player_obj.timer_effect_increment()
+            if player_obj.get_timer_effect() >= 5:
+                player_obj.reset_effect()
             
             if player.colliderect(floor_key):
                 floor_key.update(0,0,0,0)
@@ -448,12 +489,16 @@ while playing:
                 score_number += 1000
                 trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
                 timer_counter = floor_timer(floor_number)
-            for bomb in bomb_on_grid:
-                if player.collidelistall(bomb.get_explosion_trail()):
-                    game_over, in_game = True, False
+            if player_obj.get_effect() != "shield":
+                for bomb in bomb_on_grid:
+                    if player.collidelistall(bomb.get_explosion_trail()):
+                        game_over, in_game = True, False
             for powerup in powerup_on_grid:
-                if player.colliderect(powerup):
-                    score_number,radius,strenght,piercing,player_speed,bomb_max_number = powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
+                if player.colliderect(powerup.rect()):
+                    if powerup.is_effect():
+                        player_obj.give_effect(powerup.get_powerup_type())
+                    else:
+                        score_number,radius,strenght,piercing,player_speed,bomb_max_number = powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
                     powerup_on_grid.remove(powerup)
                     
             score = police.render(str(score_number), True, (255, 255, 255))
@@ -498,7 +543,12 @@ while playing:
                 game_background.blit(key_sprite, floor_key)
             for powerup in powerup_on_grid:
                 game_background.blit(powerup.sprite(), powerup.rect())
-            pygame.draw.rect(game_background, "green", player)
+            if player_obj.get_effect() == "poison":
+                pygame.draw.rect(game_background, "purple", player)
+            elif player_obj.get_effect() == "shield":
+                pygame.draw.rect(game_background, "blue", player)
+            else:
+                pygame.draw.rect(game_background, "green", player)
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
                 for explosion in bomb.get_explosion_trail():
