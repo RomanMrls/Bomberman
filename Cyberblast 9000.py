@@ -86,7 +86,7 @@ class Powerup:
     
     def sprite(self) :
         if self.__powerup_type == "coin" :
-            return good_item_sprite
+            return coin_sprite
         elif self.__powerup_type == "radius_up" :
             return rangeup_sprite
         elif self.__powerup_type == "radius_down" :
@@ -323,6 +323,8 @@ horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image
 vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png"))
 good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png"))
 bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png"))
+coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png"))
+coin_sprite.set_colorkey((0, 0, 255))
 rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png"))
 strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png"))
 speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png"))
