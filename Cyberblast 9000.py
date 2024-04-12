@@ -192,7 +192,7 @@ class Perso :
     def get_effect(self):
         return self.__effect
     
-    def get_rect(self) :
+    def rect(self) :
         return self.__rect
 
 # Functions
@@ -210,16 +210,14 @@ def relative_pos(relative_rect_size, rect):
 def powerup_appear():
     rand = random.random()
     power_up = None
-    if rand < 0.05:
+    if rand < 0.15:
         rand_power_up = random.random()
         if rand_power_up < 0.075:
-            power_up = random.choice(["strenght_down", "piercing_down", "radius_down", "speed_down"])
+            power_up = random.choice(["strenght_down", "piercing_down", "radius_down", "speed_down","poison"])
         elif rand_power_up < 0.1:
             power_up = random.choice(["bomb_number", "piercing_up"])
-        elif rand_power_up < 0.2:
-            power_up = random.choice(["shield", "poison"])
         elif rand_power_up < 0.3:
-            power_up = random.choice(["strenght_up", "radius_up"])
+            power_up = random.choice(["strenght_up", "radius_up","shield"])
         elif rand_power_up < 0.5:
             power_up = "speed_up"
         else:
@@ -258,13 +256,19 @@ def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
     bricks_list = [brick for brick in bricks_list if not player_temp_rect.colliderect(brick.rect())]
     return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
 
-def gen_floor(floor_number,player_pos):
-    # Génère la structure de l'étage
-    key_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
+def gen_key():
     key_size = (25,25)
+    key_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
     key_x = margin/2 + game_window_pos.x + (key_grid_pos[0] * (game_size[0]-margin) / 13) + ((game_size[0]-margin) / 13 - key_size[0]) / 2
     key_y = margin/2 + game_window_pos.y + (key_grid_pos[1] * (game_size[1]-margin) / 13) + ((game_size[1]-margin) / 13 - key_size[1]) / 2
     floor_key = pygame.Rect((key_x, key_y),key_size)
+    return floor_key
+    
+def gen_floor(floor_number,player_pos, player_obj):
+    # Génère la structure de l'étage
+    floor_key = gen_key()
+    while player_obj.rect().colliderect(floor_key):
+        floor_key = gen_key()
     bricks_list = gen_bricks(brick_number(floor_number), player_pos, floor_key, floor_number)
     trap = ((random.choice(bricks_list)).rect()).copy()
     return trap, floor_key, bricks_list
@@ -290,6 +294,28 @@ def timer_str(timer_counter):
             timer_str = '0' + str(timer_secondes)
     return timer_str
 
+def save_score(dictionary, fn="./score.txt", top_n=5):
+    with open(fn, "w") as f:
+        sorted_scores = sorted(dictionary.items(), key=lambda x: int(x[1][0]), reverse=True)
+        for idx, (name, score) in enumerate(sorted_scores[:top_n]):
+            f.write(f"{name}: score:{score[0]}, floor:{score[1]}\n")
+
+def load_score(fn = "./score.txt"):
+    hs = {}
+    try:
+        with open(fn, "r") as f:
+            for line in f:
+                name, _, data = line.partition(": score:")
+                if name and data:
+                    score_str, _, floor_str = data.partition(", floor:")
+                    score = int(score_str)
+                    floor = int(floor_str)
+                    hs[name] = [score, floor]
+    except FileNotFoundError:
+        return {}
+    return hs
+
+
 # Initializations
 
 pygame.init()
@@ -306,33 +332,33 @@ screen_shade.fill((0,0,0,30))
 current_dir = os.path.dirname(__file__)
 
 game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
-menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png"))
-arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png"))
-key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png"))
-key_sprite.set_colorkey((0, 0, 255))
-trapdoor_sprite = pygame.image.load(os.path.join(current_dir, "image/trapdoor.png"))
-brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/1hit_brick.png"))
-brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_1_brick.png"))
-brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_2_brick.png"))
-brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_1_brick.png"))
-brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_brick.png"))
-brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png"))
-indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png"))
-center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png"))
-horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png"))
-vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png"))
-good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png"))
-bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png"))
-coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png"))
+menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
+arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
+key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
+key_sprite.set_colorkey(key_sprite.get_at((0,0)))
+trapdoor_sprite = pygame.image.load(os.path.join(current_dir, "image/trapdoor.png")).convert()
+brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/1hit_brick.png")).convert()
+brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_1_brick.png")).convert()
+brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_2_brick.png")).convert()
+brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_1_brick.png")).convert()
+brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_brick.png")).convert()
+brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png")).convert()
+indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png")).convert()
+center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png")).convert()
+horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png")).convert()
+vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png")).convert()
+good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png")).convert()
+bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png")).convert()
+coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png")).convert()
 coin_sprite.set_colorkey((0, 0, 255))
-rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png"))
-strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png"))
-speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png"))
-shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png"))
+rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png")).convert()
+strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png")).convert()
+speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png")).convert()
+shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png")).convert()
 
-playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png"))
-extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png"))
-quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bouton.png"))
+playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png")).convert()
+extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png")).convert()
+quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bouton.png")).convert()
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -349,7 +375,7 @@ player_starting_pos = pygame.Vector2(game_window_pos)
 player_size = (50, 50)
 classe = 'Basic'
 player_obj = Perso(classe,player_starting_pos)
-player =  player_obj.get_rect()
+player =  player_obj.rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
@@ -372,9 +398,10 @@ clock.tick(FPS)
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
 police = pygame.font.Font('PressStart2P.ttf', 16)
-game_over_police = pygame.font.Font('PressStart2P.ttf', 75)
+game_over_police = pygame.font.Font('PressStart2P.ttf', 70)
 
 key_pressed_state = {}
+score_dict = {}
 
 dt = 0
 
@@ -382,13 +409,15 @@ dt = 0
 
 playing = True
 in_game = False
+in_info = False
 
 while playing:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save_score(score_dict)
             pygame.quit()
             sys.exit()
-    if not in_game:
+    if not in_game and not in_info:
         click = pygame.mouse.get_pressed()
         if click[0]:
             if play_button.collidepoint(pygame.mouse.get_pos()):
@@ -402,19 +431,32 @@ while playing:
                 bomb_on_grid = []
                 bomb_max_number = 1
                 explosion_on_grid = []
-                trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos)
+                trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos,player_obj)
                 player.topleft = player_starting_pos
                 player_speed, speed_malus = 200, 200
                 radius, piercing, strenght = 2,1,1
-                    
+            
+            elif info_button.collidepoint(pygame.mouse.get_pos()):
+                in_info = True
+                pygame.time.wait(200)
+                
             elif exit_button.collidepoint(pygame.mouse.get_pos()):
+                save_score(score_dict)
                 playing = False
+                pygame.time.wait(200)
                 
         screen.blit(menu_background, (0, 0))
         screen.blit(playbouton_sprite, play_button)
         screen.blit(extrabouton_sprite, info_button)
         screen.blit(quitbouton_sprite, exit_button)
         pygame.display.update()
+    elif in_info:
+        click = pygame.mouse.get_pressed()
+        if click[0]:
+            in_info = False
+            pygame.time.wait(200)
+        screen.blit(menu_background, (0, 0))
+        pygame.display.update()   
     else:
         while not game_over:
             for event in pygame.event.get():
@@ -430,6 +472,10 @@ while playing:
                         key_pressed_state[event.key] = True
                 elif event.type == pygame.KEYUP:
                      key_pressed_state[event.key] = False
+                elif event.type == pygame.QUIT:
+                    save_score(score_dict)
+                    pygame.quit()
+                    sys.exit()
 
             player_velocity = pygame.Vector2(0, 0)
             for key, state in key_pressed_state.items():
@@ -475,11 +521,12 @@ while playing:
                     
             if player_obj.get_timer_effect() >= 0:
                 player_obj.timer_effect_increment()
-                speed_malus = 150
+                if player_obj.get_effect() == "poison":
+                    speed_malus = 150
             if player_obj.get_timer_effect() >= 5:
                 player_obj.reset_effect()
                 speed_malus = player_speed
-            
+        
             if player.colliderect(floor_key):
                 floor_key.update(0,0,0,0)
                 key_picked_up = True
@@ -487,7 +534,7 @@ while playing:
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
                 score_number += 1000
-                trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft)
+                trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft,player_obj)
                 timer_counter = floor_timer(floor_number)
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
@@ -503,17 +550,17 @@ while playing:
                     
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
-            score_center_point = (screenx // 2, 67.5 // 2)
+            score_center_point = (screenx // 2, 69 // 2)
             score_pos = (score_center_point[0] - score_rect.width // 2, score_center_point[1] - score_rect.height // 2)
 
             timer = police.render(timer_str(timer_counter), True, (255, 255, 255))
             timer_rect = timer.get_rect()
-            timer_center_point = (92.5, 67.5 // 2)
+            timer_center_point = (92.5, 69 // 2)
             timer_pos = (timer_center_point[0] - timer_rect.width // 2, timer_center_point[1] - timer_rect.height // 2)
 
             floor = police.render(f"Floor:{floor_number}", True, (255, 255, 255))
             floor_rect = floor.get_rect()
-            floor_center_point = (screenx-145 , 67.5 // 2)
+            floor_center_point = (screenx-145 , 69 // 2)
             floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
@@ -565,7 +612,8 @@ while playing:
             clock.tick(FPS)
             
             if game_over:
-                game_over_text = game_over_police.render("GAME OVER !", True, "green")
+                score_dict["nom"] = [score_number, floor_number]
+                game_over_text = game_over_police.render("GAME OVER !", True, "#DEFF00")
                 game_over_text_rect = game_over_text.get_rect()
                 screen.blit(screen_shade,(0,0))
                 screen.blit(game_over_text, (screenx/2 - game_over_text_rect.width // 2, screeny/2 - game_over_text_rect.height // 2))
