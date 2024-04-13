@@ -80,8 +80,11 @@ class Powerup:
                 player_speed += 25
             elif self.__powerup_type == "speed_down":
                 player_speed -= 25
-            elif self.__powerup_type == "bomb_number" :
+            elif self.__powerup_type == "bomb_number_up" :
                 bomb_max_number += 1
+            elif self.__powerup_type == "bomb_number_down" :
+                if bomb_max_number > 1 :
+                    bomb_max_number -= 1
             return(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
     
     def sprite(self) :
@@ -90,25 +93,27 @@ class Powerup:
         elif self.__powerup_type == "radius_up" :
             return rangeup_sprite
         elif self.__powerup_type == "radius_down" :
-            return bad_item_sprite
+            return rangedown_sprite
         elif self.__powerup_type == "strenght_up" :
             return strenghtup_sprite
         elif self.__powerup_type == "strenght_down" :
-            return bad_item_sprite
+            return strenghtdown_sprite
         elif self.__powerup_type == "piercing_up" :
-            return good_item_sprite
+            return piercingup_sprite
         elif self.__powerup_type == "piercing_down" :
-            return bad_item_sprite
+            return piercingdown_sprite
         elif self.__powerup_type == "speed_up" :
             return speedup_sprite
         elif self.__powerup_type == "speed_down":
-            return bad_item_sprite
-        elif self.__powerup_type == "bomb_number" :
-            return good_item_sprite
+            return speeddown_sprite
+        elif self.__powerup_type == "bomb_number_up" :
+            return bombup_sprite
+        elif self.__powerup_type == "bomb_number_down" :
+            return bombdown_sprite
         elif self.__powerup_type == "shield":
             return shield_sprite
         elif self.__powerup_type == "poison":
-            return bad_item_sprite
+            return poison_sprite
            
 class Bomb:
     def __init__(self, pos):
@@ -168,12 +173,13 @@ class Bomb:
         return self.__explosion_trail
 
 class Perso :
-    def __init__(self,classe,pos) :
+    def __init__(self,classe,sprite,pos) :
         self.__class = classe
         self.__rect = pygame.Rect(pos, player_size)
         self.__effect = None
         self.__timer_effect = -1
         self.__timer_capa = -1
+        self.__sprite = sprite
     
     def give_effect(self,effect):
         self.__effect = effect
@@ -194,6 +200,12 @@ class Perso :
     
     def rect(self) :
         return self.__rect
+    
+    def sprite(self) :
+        return self.__sprite
+    
+    def set_sprite(self, sprite) :
+        self.__sprite = sprite
 
 # Functions
 
@@ -347,9 +359,11 @@ game_background = pygame.image.load(os.path.join(current_dir, "image/game_backgr
 menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
 blank_background = pygame.image.load(os.path.join(current_dir, "image/blank_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
+
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
 key_sprite.set_colorkey(key_sprite.get_at((0,0)))
 trapdoor_sprite = pygame.image.load(os.path.join(current_dir, "image/trapdoor.png")).convert()
+
 brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/1hit_brick.png")).convert()
 brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_1_brick.png")).convert()
 brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_2_brick.png")).convert()
@@ -357,21 +371,54 @@ brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_1_
 brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_brick.png")).convert()
 brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png")).convert()
 indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png")).convert()
+
 center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png")).convert()
 horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png")).convert()
 vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png")).convert()
+
 good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png")).convert()
 bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png")).convert()
 coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png")).convert()
 coin_sprite.set_colorkey((0, 0, 255))
+
 rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png")).convert()
 strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png")).convert()
 speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png")).convert()
+bombup_sprite = pygame.image.load(os.path.join(current_dir, "image/bombup_sprite.png")).convert()
+piercingup_sprite = pygame.image.load(os.path.join(current_dir, "image/piercingup_sprite.png")).convert()
 shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png")).convert()
+
+rangedown_sprite = pygame.image.load(os.path.join(current_dir, "image/rangedown_sprite.png")).convert()
+strenghtdown_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtdown_sprite.png")).convert()
+speeddown_sprite = pygame.image.load(os.path.join(current_dir, "image/speeddown_sprite.png")).convert()
+bombdown_sprite = pygame.image.load(os.path.join(current_dir, "image/bombdown_sprite.png")).convert()
+piercingdown_sprite = pygame.image.load(os.path.join(current_dir, "image/piercingdown_sprite.png")).convert()
+poison_sprite = pygame.image.load(os.path.join(current_dir, "image/poison_sprite.png")).convert()
 
 playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png")).convert()
 extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png")).convert()
 quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bouton.png")).convert()
+
+tv_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/idle.png")).convert()
+tv_idle_sprite.set_colorkey(tv_idle_sprite.get_at((0,0)))
+tv_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/front_walk1.png")).convert()
+tv_walkfront1_sprite.set_colorkey(tv_walkfront1_sprite.get_at((0,0)))
+tv_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/front_walk2.png")).convert()
+tv_walkfront2_sprite.set_colorkey(tv_walkfront2_sprite.get_at((0,0)))
+tv_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_left1.png")).convert()
+tv_walkleft1_sprite.set_colorkey(tv_walkleft1_sprite.get_at((0,0)))
+tv_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_left2.png")).convert()
+tv_walkleft2_sprite.set_colorkey(tv_walkleft2_sprite.get_at((0,0)))
+tv_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_right1.png")).convert()
+tv_walkright1_sprite.set_colorkey(tv_walkright1_sprite.get_at((0,0)))
+tv_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_right2.png")).convert()
+tv_walkright2_sprite.set_colorkey(tv_walkright2_sprite.get_at((0,0)))
+tv_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/back_walk1.png")).convert()
+tv_walkback1_sprite.set_colorkey(tv_walkback1_sprite.get_at((0,0)))
+tv_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/back_walk2.png")).convert()
+tv_walkback2_sprite.set_colorkey(tv_walkback2_sprite.get_at((0,0)))
+
+
 
 button_size = (500,100)
 play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - button_size[1]/2) , button_size)
@@ -386,7 +433,7 @@ margin = 9/2
 player_starting_pos = pygame.Vector2(game_window_pos)
 player_size = (50, 50)
 classe = 'Basic'
-player_obj = Perso(classe,player_starting_pos)
+player_obj = Perso(classe,tv_idle_sprite,player_starting_pos)
 player =  player_obj.rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
@@ -451,6 +498,7 @@ while playing:
                     player.topleft = player_starting_pos
                     player_speed, speed_malus = 200, 200
                     radius, piercing, strenght = 2,1,1
+                    current_anim = 0
                 
                 elif info_button.collidepoint(pygame.mouse.get_pos()):
                     in_menu += 1
@@ -475,12 +523,14 @@ while playing:
             pygame.display.update()   
     else:
         while not game_over:
+            player_obj.set_sprite(tv_idle_sprite)
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
                         timer_counter -= 1
                     else:
                         game_over = True
+                    current_anim = (current_anim + 1)%2
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and relative_pos(bomb_size, player) not in [bomb.get_pos() for bomb in bomb_on_grid]:
                         bomb_on_grid.append(Bomb(relative_pos(bomb_size, player)))
@@ -496,6 +546,31 @@ while playing:
                         player_velocity.x += direction[key][0] * min(speed_malus, player_speed) * dt
                     elif key in [pygame.K_UP, pygame.K_DOWN]:
                         player_velocity.y += direction[key][1] * min(speed_malus, player_speed) * dt
+            
+            
+            for key, state in key_pressed_state.items():
+                if state and key in direction:
+                    if key == pygame.K_LEFT :
+                        if current_anim == 0 :
+                            player_obj.set_sprite(tv_walkleft1_sprite)
+                        elif current_anim == 1 :
+                            player_obj.set_sprite(tv_walkleft2_sprite)
+                    elif key == pygame.K_RIGHT :
+                        if current_anim == 0 :
+                            player_obj.set_sprite(tv_walkright1_sprite)
+                        elif current_anim == 1 :
+                            player_obj.set_sprite(tv_walkright2_sprite)
+                    elif key == pygame.K_UP :
+                        if current_anim == 0 :
+                            player_obj.set_sprite(tv_walkback1_sprite)
+                        elif current_anim == 1 :
+                            player_obj.set_sprite(tv_walkback2_sprite)
+                    elif key == pygame.K_DOWN :
+                        if current_anim == 0 :
+                            player_obj.set_sprite(tv_walkfront1_sprite)
+                        elif current_anim == 1 :
+                            player_obj.set_sprite(tv_walkfront2_sprite)
+            
 
             temp_player = player.move(player_velocity.x, 0)
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+[brick.rect() for brick in bricks_list]) == []:
@@ -604,7 +679,7 @@ while playing:
             elif player_obj.get_effect() == "shield":
                 pygame.draw.rect(game_background, "blue", player)
             else:
-                pygame.draw.rect(game_background, "green", player)
+                game_background.blit(player_obj.sprite(), player)
             for bomb in bomb_on_grid:
                 pygame.draw.rect(game_background, "red", bomb.rect() )
                 for explosion in bomb.get_explosion_trail():
