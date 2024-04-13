@@ -294,7 +294,7 @@ def timer_str(timer_counter):
             timer_str = '0' + str(timer_secondes)
     return timer_str
 
-def save_score(dictionary, fn="./score.txt", top_n=5):
+def save_score(dictionary, fn="./score.txt", top_n=10):
     with open(fn, "w") as f:
         sorted_scores = sorted(dictionary.items(), key=lambda x: int(x[1][0]), reverse=True)
         for idx, (name, score) in enumerate(sorted_scores[:top_n]):
@@ -315,6 +315,18 @@ def load_score(fn = "./score.txt"):
         return {}
     return hs
 
+def display_scores(dictionary):
+    text_surface = police4.render("Scoreboard", True, (255,255,255))
+    text_surface_rect = text_surface.get_rect()
+    screen.blit(text_surface, (screenx/2 - text_surface_rect.width // 2, screeny/5 - text_surface_rect.height // 2))
+    text_y = screeny/5*2
+    sorted_scores = sorted(dictionary.items(), key=lambda x: int(x[1][0]), reverse=True)
+    for idx, (name, score) in enumerate(sorted_scores[:10]):
+        score_text = f"{name}: Score: {score[0]}, Floor: {score[1]}"
+        text_surface = police.render(score_text, True, (255,255,255))
+        text_surface_rect = text_surface.get_rect()
+        screen.blit(text_surface, (screenx/2 - text_surface_rect.width // 2, text_y - text_surface_rect.height // 2))
+        text_y += 50
 
 # Initializations
 
@@ -327,12 +339,13 @@ screenx = 1000
 screeny = 900
 
 screen_shade = pygame.Surface((screenx,screeny)).convert_alpha()
-screen_shade.fill((0,0,0,30))
+screen_shade.fill((0,0,0,100))
 
 current_dir = os.path.dirname(__file__)
 
 game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
+blank_background = pygame.image.load(os.path.join(current_dir, "image/blank_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
 key_sprite.set_colorkey(key_sprite.get_at((0,0)))
@@ -370,7 +383,6 @@ game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_s
 game_window = pygame.Rect(game_window_pos, game_size)
 margin = 9/2
 
-
 player_starting_pos = pygame.Vector2(game_window_pos)
 player_size = (50, 50)
 classe = 'Basic'
@@ -398,10 +410,12 @@ clock.tick(FPS)
 pygame.time.set_timer(pygame.USEREVENT, 1000) 
 
 police = pygame.font.Font('PressStart2P.ttf', 16)
-game_over_police = pygame.font.Font('PressStart2P.ttf', 70)
+police2 = pygame.font.Font('PressStart2P.ttf', 35)
+police3 = pygame.font.Font('PressStart2P.ttf', 45)
+police4 = pygame.font.Font('PressStart2P.ttf', 70)
 
 key_pressed_state = {}
-score_dict = {}
+score_dict = load_score()
 
 dt = 0
 
@@ -409,7 +423,8 @@ dt = 0
 
 playing = True
 in_game = False
-in_info = False
+in_menu = 1
+end_menu = -1
 
 while playing:
     for event in pygame.event.get():
@@ -417,46 +432,47 @@ while playing:
             save_score(score_dict)
             pygame.quit()
             sys.exit()
-    if not in_game and not in_info:
-        click = pygame.mouse.get_pressed()
-        if click[0]:
-            if play_button.collidepoint(pygame.mouse.get_pos()):
-                in_game = True
-                game_over = False
-                score_number = 500
-                floor_number = 1
-                timer_counter = floor_timer(floor_number)
-                key_pressed_state = {}
-                powerup_on_grid = []
-                bomb_on_grid = []
-                bomb_max_number = 1
-                explosion_on_grid = []
-                trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos,player_obj)
-                player.topleft = player_starting_pos
-                player_speed, speed_malus = 200, 200
-                radius, piercing, strenght = 2,1,1
-            
-            elif info_button.collidepoint(pygame.mouse.get_pos()):
-                in_info = True
-                pygame.time.wait(200)
+    if not in_game:
+        if in_menu == 1:
+            click = pygame.mouse.get_pressed()
+            if click[0]:
+                if play_button.collidepoint(pygame.mouse.get_pos()):
+                    in_game = True
+                    game_over = False
+                    score_number = 500
+                    floor_number = 1
+                    timer_counter = floor_timer(floor_number)
+                    key_pressed_state = {}
+                    powerup_on_grid = []
+                    bomb_on_grid = []
+                    bomb_max_number = 1
+                    explosion_on_grid = []
+                    trap, floor_key, bricks_list = gen_floor(floor_number,player_starting_pos,player_obj)
+                    player.topleft = player_starting_pos
+                    player_speed, speed_malus = 200, 200
+                    radius, piercing, strenght = 2,1,1
                 
-            elif exit_button.collidepoint(pygame.mouse.get_pos()):
-                save_score(score_dict)
-                playing = False
-                pygame.time.wait(200)
+                elif info_button.collidepoint(pygame.mouse.get_pos()):
+                    in_menu += 1
+                    pygame.time.wait(200)
+                    
+                elif exit_button.collidepoint(pygame.mouse.get_pos()):
+                    save_score(score_dict)
+                    playing = False
+                    pygame.time.wait(200)
                 
-        screen.blit(menu_background, (0, 0))
-        screen.blit(playbouton_sprite, play_button)
-        screen.blit(extrabouton_sprite, info_button)
-        screen.blit(quitbouton_sprite, exit_button)
-        pygame.display.update()
-    elif in_info:
-        click = pygame.mouse.get_pressed()
-        if click[0]:
-            in_info = False
-            pygame.time.wait(200)
-        screen.blit(menu_background, (0, 0))
-        pygame.display.update()   
+            screen.blit(menu_background, (0, 0))
+            screen.blit(playbouton_sprite, play_button)
+            screen.blit(extrabouton_sprite, info_button)
+            screen.blit(quitbouton_sprite, exit_button)
+            pygame.display.update()
+        elif in_menu == 2:
+            click = pygame.mouse.get_pressed()
+            if click[0]:
+                in_menu -= 1
+                pygame.time.wait(200)
+            screen.blit(menu_background, (0, 0))
+            pygame.display.update()   
     else:
         while not game_over:
             for event in pygame.event.get():
@@ -464,18 +480,14 @@ while playing:
                     if timer_counter > 0:
                         timer_counter -= 1
                     else:
-                        game_over, in_game = True, False
+                        game_over = True
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and relative_pos(bomb_size, player) not in [bomb.get_pos() for bomb in bomb_on_grid]:
                         bomb_on_grid.append(Bomb(relative_pos(bomb_size, player)))
                     elif event.key in direction:
                         key_pressed_state[event.key] = True
                 elif event.type == pygame.KEYUP:
-                     key_pressed_state[event.key] = False
-                elif event.type == pygame.QUIT:
-                    save_score(score_dict)
-                    pygame.quit()
-                    sys.exit()
+                    key_pressed_state[event.key] = False
 
             player_velocity = pygame.Vector2(0, 0)
             for key, state in key_pressed_state.items():
@@ -492,7 +504,7 @@ while playing:
             temp_player = player.move(0, player_velocity.y)
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+[brick.rect() for brick in bricks_list]) == []:
                 player.y = temp_player.y
-            
+                
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
                     bomb.timer_increment()
@@ -512,21 +524,21 @@ while playing:
                                 powerup_on_grid.append(Powerup(relative_pos(powerup_size, brick.rect()), powerup))
                             bricks_list.remove(brick)
                     bomb_on_grid.remove(bomb)
-                    
+                        
             for powerup in powerup_on_grid:
                 if powerup.timer() >= 0:
                     powerup.timer_increment()
                 if powerup.timer() >= 5:
                     powerup_on_grid.remove(powerup)
-                    
+                        
             if player_obj.get_timer_effect() >= 0:
                 player_obj.timer_effect_increment()
                 if player_obj.get_effect() == "poison":
-                    speed_malus = 150
+                     speed_malus = 150
             if player_obj.get_timer_effect() >= 5:
                 player_obj.reset_effect()
                 speed_malus = player_speed
-        
+            
             if player.colliderect(floor_key):
                 floor_key.update(0,0,0,0)
                 key_picked_up = True
@@ -539,15 +551,15 @@ while playing:
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
                     if player.collidelistall(bomb.get_explosion_trail()):
-                        game_over, in_game = True, False
+                        game_over = True
             for powerup in powerup_on_grid:
                 if player.colliderect(powerup.rect()):
                     if powerup.is_effect():
                         player_obj.give_effect(powerup.get_powerup_type())
                     else:
                         score_number,radius,strenght,piercing,player_speed,bomb_max_number = powerup.use(score_number,radius,strenght,piercing,player_speed,bomb_max_number)
-                    powerup_on_grid.remove(powerup)
-                    
+                        powerup_on_grid.remove(powerup)
+                        
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
             score_center_point = (screenx // 2, 69 // 2)
@@ -562,10 +574,7 @@ while playing:
             floor_rect = floor.get_rect()
             floor_center_point = (screenx-145 , 69 // 2)
             floor_pos = (floor_center_point[0] + 45 - floor_rect.width // 2, floor_center_point[1] - floor_rect.height // 2)
-            screen.blit(game_background, (0, 0))
-            screen.blit(score, score_pos)
-            screen.blit(timer, timer_pos)
-            screen.blit(floor, floor_pos)
+
             game_background.blit(arena_background, game_window_pos)
             for unbreakables_bricks in unbreakables_list:
                 game_background.blit(indestructible_brick_sprite, unbreakables_bricks)
@@ -608,18 +617,106 @@ while playing:
                                 game_background.blit(vertical_explosion_sprite, explosion)
                         else :
                             game_background.blit(horizontal_explosion_sprite, explosion)
+            screen.blit(game_background, (0, 0))
+            screen.blit(score, score_pos)
+            screen.blit(timer, timer_pos)
+            screen.blit(floor, floor_pos)
+            
             pygame.display.update()
             clock.tick(FPS)
-            
-            if game_over:
-                score_dict["nom"] = [score_number, floor_number]
-                game_over_text = game_over_police.render("GAME OVER !", True, "#DEFF00")
-                game_over_text_rect = game_over_text.get_rect()
+        
+        name = ""
+        end_menu += 1
+        if end_menu == 0:
+            game_over_text = police4.render("GAME OVER !", True, "#DEFF00")
+            game_over_text_rect = game_over_text.get_rect()
+            screen.blit(screen_shade,(0,0))
+            screen.blit(game_over_text, (screenx/2 - game_over_text_rect.width // 2, screeny/2 - game_over_text_rect.height // 2))
+            pygame.display.update()
+            pygame.time.wait(2000)
+        elif end_menu == 1:
+            user_text = ""
+            while name == "":
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
+                            name = user_text
+                        elif event.key == pygame.K_BACKSPACE:
+                            user_text = user_text[:-1]
+                        else:
+                            if len(user_text) < 15:
+                                user_text += event.unicode
+                            
+                game_background.blit(arena_background, game_window_pos)
+                for unbreakables_bricks in unbreakables_list:
+                    game_background.blit(indestructible_brick_sprite, unbreakables_bricks)
+                for brick in bricks_list:
+                    if brick.types() == 1 :
+                        game_background.blit(brick_1hit_sprite, brick.rect())
+                    elif brick.types() == 2 :
+                        if brick.durability() == 1:
+                            game_background.blit(brick_2hit_1_sprite, brick.rect())
+                        elif brick.durability() == 2:
+                            game_background.blit(brick_2hit_2_sprite, brick.rect())
+                    elif brick.types() == 3 :
+                        if brick.durability() == 1:
+                            game_background.blit(brick_3hit_1_sprite, brick.rect())
+                        elif brick.durability() == 2:
+                            game_background.blit(brick_3hit_2_sprite, brick.rect())
+                        elif brick.durability() == 3:
+                            game_background.blit(brick_3hit_3_sprite, brick.rect())
+                if not trap.collidelistall(bricks_list):
+                    game_background.blit(trapdoor_sprite, trap)
+                if not key_picked_up:
+                    game_background.blit(key_sprite, floor_key)
+                for powerup in powerup_on_grid:
+                    game_background.blit(powerup.sprite(), powerup.rect())
+                if player_obj.get_effect() == "poison":
+                    pygame.draw.rect(game_background, "purple", player)
+                else:
+                    pygame.draw.rect(game_background, "green", player)
+                for bomb in bomb_on_grid:
+                    pygame.draw.rect(game_background, "red", bomb.rect() )
+                    for explosion in bomb.get_explosion_trail():
+                        diff = (explosion_size[0]-bomb_size[0])//2
+                        if game_window.contains(explosion):
+                            if bomb.rect()[0] == explosion[0]+diff :
+                                if bomb.rect()[1] == explosion[1]+diff :
+                                    game_background.blit(center_explosion_sprite, explosion)
+                                else :
+                                    game_background.blit(vertical_explosion_sprite, explosion)
+                            else :
+                                game_background.blit(horizontal_explosion_sprite, explosion)
+                screen.blit(game_background, (0, 0))
+                screen.blit(score, score_pos)
+                screen.blit(timer, timer_pos)
+                screen.blit(floor, floor_pos)
+                
                 screen.blit(screen_shade,(0,0))
-                screen.blit(game_over_text, (screenx/2 - game_over_text_rect.width // 2, screeny/2 - game_over_text_rect.height // 2))
+                
+                name_text = police3.render("Enter your name:", True, "#DEFF00")
+                name_text_rect = name_text.get_rect()
+                screen.blit(name_text, (screenx/2 - name_text_rect.width // 2, screeny/4 - name_text_rect.height // 2))
+                
+                text_surface_center_point = (screenx/2 , screeny/ 2)
+                text_surface = police2.render(f"Name: {user_text}", True, "#DEFF00")
+                text_surface_rect = text_surface.get_rect()
+                text_surface_pos = (text_surface_center_point[0] - text_surface_rect.width // 2, text_surface_center_point[1] - text_surface_rect.height // 2)
+                screen.blit(text_surface, text_surface_pos)
+                
                 pygame.display.update()
-                pygame.time.wait(3000)
-
+                
+            score_dict[name] = [score_number, floor_number]
+        elif end_menu == 2:
+            end_menu = -1
+            in_game = False
+            screen.blit(blank_background,(0,0))
+            display_scores(score_dict)
+            pygame.display.update()
+            pygame.time.wait(4000)
+            
     dt = clock.tick(FPS) / 1000
 
 pygame.quit()
