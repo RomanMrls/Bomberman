@@ -583,6 +583,7 @@ while playing:
     
     else:
         while not character_selected :
+            character_background = blank_background
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -601,11 +602,20 @@ while playing:
                 elif ninja_button.collidepoint(pygame.mouse.get_pos()):
                     character_selected = True
                     classe = 'Ninja'
-            screen.blit(basic_background, (0, 0))
-            pygame.draw.rect(basic_background, "purple", basic_button)
-            pygame.draw.rect(basic_background, "purple", tv_button)
-            pygame.draw.rect(basic_background, "purple", forest_button)
-            pygame.draw.rect(basic_background, "purple", ninja_button)
+            if not click[0] :
+                if basic_button.collidepoint(pygame.mouse.get_pos()):
+                    character_background = basic_background
+                elif tv_button.collidepoint(pygame.mouse.get_pos()):
+                    character_background = basic_background
+                elif forest_button.collidepoint(pygame.mouse.get_pos()):
+                    character_background = basic_background
+                elif ninja_button.collidepoint(pygame.mouse.get_pos()):
+                    character_background = basic_background
+            screen.blit(character_background, (0, 0))
+            pygame.draw.rect(character_background, "purple", basic_button)
+            pygame.draw.rect(character_background, "purple", tv_button)
+            pygame.draw.rect(character_background, "purple", forest_button)
+            pygame.draw.rect(character_background, "purple", ninja_button)
             pygame.display.update()
         player_obj = Perso(classe,player_starting_pos)
         player =  player_obj.rect()
