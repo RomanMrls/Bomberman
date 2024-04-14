@@ -327,7 +327,7 @@ def load_score(fn = "./score.txt"):
         return {}
     return hs
 
-def display_scores(dictionary):
+def display_scores(dictionary , player_name = ""):
     text_surface = police4.render("Scoreboard", True, (255,255,255))
     text_surface_rect = text_surface.get_rect()
     screen.blit(text_surface, (screenx/2 - text_surface_rect.width // 2, screeny/5 - text_surface_rect.height // 2))
@@ -335,7 +335,10 @@ def display_scores(dictionary):
     sorted_scores = sorted(dictionary.items(), key=lambda x: int(x[1][0]), reverse=True)
     for idx, (name, score) in enumerate(sorted_scores[:10]):
         score_text = f"{name}: Score: {score[0]}, Floor: {score[1]}"
-        text_surface = police.render(score_text, True, (255,255,255))
+        if name == player_name:
+            text_surface = police.render(score_text, True, (0,191,255))
+        else:
+            text_surface = police.render(score_text, True, (255,255,255))
         text_surface_rect = text_surface.get_rect()
         screen.blit(text_surface, (screenx/2 - text_surface_rect.width // 2, text_y - text_surface_rect.height // 2))
         text_y += 50
@@ -372,6 +375,8 @@ brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_
 brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png")).convert()
 indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png")).convert()
 
+bomb_sprite = pygame.image.load(os.path.join(current_dir, "image/bomb_sprite.png")).convert()
+bomb_sprite.set_colorkey(bomb_sprite.get_at((0,0)))
 center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png")).convert()
 horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png")).convert()
 vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png")).convert()
@@ -379,7 +384,7 @@ vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/e
 good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png")).convert()
 bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png")).convert()
 coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png")).convert()
-coin_sprite.set_colorkey((0, 0, 255))
+coin_sprite.set_colorkey(coin_sprite.get_at((0,0)))
 
 rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png")).convert()
 strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png")).convert()
@@ -622,6 +627,7 @@ while playing:
                 floor_number += 1
                 score_number += 1000
                 trap, floor_key, bricks_list = gen_floor(floor_number,player.topleft,player_obj)
+                key_picked_up = False
                 timer_counter = floor_timer(floor_number)
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
@@ -681,7 +687,7 @@ while playing:
             else:
                 game_background.blit(player_obj.sprite(), player)
             for bomb in bomb_on_grid:
-                pygame.draw.rect(game_background, "red", bomb.rect() )
+                game_background.blit(bomb_sprite, bomb.rect())
                 for explosion in bomb.get_explosion_trail():
                     diff = (explosion_size[0]-bomb_size[0])//2
                     if game_window.contains(explosion):
@@ -700,7 +706,7 @@ while playing:
             pygame.display.update()
             clock.tick(FPS)
         
-        name = ""
+        
         end_menu += 1
         if end_menu == 0:
             game_over_text = police4.render("GAME OVER !", True, "#DEFF00")
@@ -710,14 +716,15 @@ while playing:
             pygame.display.update()
             pygame.time.wait(2000)
         elif end_menu == 1:
+            player_name = ""
             user_text = ""
-            while name == "":
+            while player_name == "":
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
-                            name = user_text
+                            player_name = user_text
                         elif event.key == pygame.K_BACKSPACE:
                             user_text = user_text[:-1]
                         else:
@@ -751,9 +758,9 @@ while playing:
                 if player_obj.get_effect() == "poison":
                     pygame.draw.rect(game_background, "purple", player)
                 else:
-                    pygame.draw.rect(game_background, "green", player)
+                    game_background.blit(player_obj.sprite(), player)
                 for bomb in bomb_on_grid:
-                    pygame.draw.rect(game_background, "red", bomb.rect() )
+                    game_background.blit(bomb_sprite, bomb.rect())
                     for explosion in bomb.get_explosion_trail():
                         diff = (explosion_size[0]-bomb_size[0])//2
                         if game_window.contains(explosion):
@@ -783,12 +790,12 @@ while playing:
                 
                 pygame.display.update()
                 
-            score_dict[name] = [score_number, floor_number]
+            score_dict[player_name] = [score_number, floor_number]
         elif end_menu == 2:
             end_menu = -1
             in_game = False
             screen.blit(blank_background,(0,0))
-            display_scores(score_dict)
+            display_scores(score_dict, player_name)
             pygame.display.update()
             pygame.time.wait(4000)
             
