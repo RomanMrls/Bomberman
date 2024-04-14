@@ -171,15 +171,40 @@ class Bomb:
                 
     def get_explosion_trail(self):
         return self.__explosion_trail
-
+"""
+animations[0] = Regard de face
+animations[1] = Regard 3/4 droite
+animations[2] = Regard 3/4 gauche
+animations[3] = Marche devant 1
+animations[4] = Marche devant 2
+animations[5] = Marche droite 1
+animations[6] = Marche droite 2
+animations[7] = Marche gauche 1
+animations[8] = Marche gauche 2
+animations[9] = Marche derrière 1
+animations[10] = Marche derrière 2
+"""
 class Perso :
-    def __init__(self,classe,sprite,pos) :
+    def __init__(self,classe,pos) :
         self.__class = classe
+        '''
+        if classe == 'Basic' :
+            self.__animations = [basic_idle_face_sprite,basic_idle_right_sprite,basic_idle_left_sprite,basic_walkfront1_sprite,basic_walkfront2_sprite,basic_walkright1_sprite,basic_walkright2_sprite,basic_walkleft1_sprite,basic_walkleft2_sprite,basic_walkback1_sprite,basic_walkback2_sprite]
+        elif classe == 'Tv' :
+            self.__animations = [tv_idle_face_sprite,tv_idle_right_sprite,tv_idle_left_sprite,tv_walkfront1_sprite,tv_walkfront2_sprite,tv_walkright1_sprite,tv_walkright2_sprite,tv_walkleft1_sprite,tv_walkleft2_sprite,tv_walkback1_sprite,tv_walkback2_sprite]
+        elif classe == 'Ninja' :
+            self.__animations = [ninja_idle_face_sprite,ninja_idle_right_sprite,ninja_idle_left_sprite,ninja_walkfront1_sprite,ninja_walkfront2_sprite,ninja_walkright1_sprite,ninja_walkright2_sprite,ninja_walkleft1_sprite,ninja_walkleft2_sprite,ninja_walkback1_sprite,ninja_walkback2_sprite]
+        elif classe == 'Forest' :
+            self.__animations = [forest_idle_face_sprite,forest_idle_right_sprite,forest_idle_left_sprite,forest_walkfront1_sprite,forest_walkfront2_sprite,forest_walkright1_sprite,forest_walkright2_sprite,forest_walkleft1_sprite,forest_walkleft2_sprite,forest_walkback1_sprite,forest_walkback2_sprite]
+        '''
+        self.__animations = [tv_idle_sprite,tv_idle_sprite,tv_idle_sprite,tv_walkfront1_sprite,tv_walkfront2_sprite,tv_walkright1_sprite,tv_walkright2_sprite,tv_walkleft1_sprite,tv_walkleft2_sprite,tv_walkback1_sprite,tv_walkback2_sprite]
         self.__rect = pygame.Rect(pos, player_size)
         self.__effect = None
         self.__timer_effect = -1
         self.__timer_capa = -1
-        self.__sprite = sprite
+        self.__sprite = self.__animations[0]
+        self.__orientation = 'Front'
+        self.__current_anim = 0
     
     def give_effect(self,effect):
         self.__effect = effect
@@ -201,12 +226,32 @@ class Perso :
     def rect(self) :
         return self.__rect
     
+    def current_anim(self) :
+        return self.__current_anim
+    
+    def orientation(self) :
+        return self.__orientation
+    
     def sprite(self) :
         return self.__sprite
     
     def set_sprite(self, sprite) :
-        self.__sprite = sprite
+        self.__sprite = self.__animations[sprite]
 
+    def next_anim(self) :   
+        self.__current_anim = (self.__current_anim +1)%2
+        
+    def set_orientation(self,orientation) :
+        self.__orientation = orientation
+    
+    def idle(self) :
+        if self.__orientation == 'Right' :
+            self.__sprite = self.__animations[1]
+        elif self.__orientation == 'Left' :
+            self.__sprite = self.__animations[2]
+        else :
+            self.__sprite = self.__animations[0]
+        
 # Functions
 
 def relative_pos(relative_rect_size, rect):
@@ -222,6 +267,7 @@ def relative_pos(relative_rect_size, rect):
 def powerup_appear():
     rand = random.random()
     power_up = None
+    return "speed_up"
     if rand < 0.15:
         rand_power_up = random.random()
         if rand_power_up < 0.075:
@@ -327,7 +373,7 @@ def load_score(fn = "./score.txt"):
         return {}
     return hs
 
-def display_scores(dictionary , player_name = ""):
+def display_scores(dictionary, player_name = ""):
     text_surface = police4.render("Scoreboard", True, (255,255,255))
     text_surface_rect = text_surface.get_rect()
     screen.blit(text_surface, (screenx/2 - text_surface_rect.width // 2, screeny/5 - text_surface_rect.height // 2))
@@ -361,6 +407,7 @@ current_dir = os.path.dirname(__file__)
 game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
 blank_background = pygame.image.load(os.path.join(current_dir, "image/blank_background.png")).convert()
+basic_background = pygame.image.load(os.path.join(current_dir, "image/basic_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
 
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
@@ -381,8 +428,7 @@ center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/exp
 horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png")).convert()
 vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png")).convert()
 
-good_item_sprite = pygame.image.load(os.path.join(current_dir, "image/good_item_sprite.png")).convert()
-bad_item_sprite = pygame.image.load(os.path.join(current_dir, "image/bad_item_sprite.png")).convert()
+
 coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png")).convert()
 coin_sprite.set_colorkey(coin_sprite.get_at((0,0)))
 
@@ -406,9 +452,9 @@ quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bout
 
 tv_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/idle.png")).convert()
 tv_idle_sprite.set_colorkey(tv_idle_sprite.get_at((0,0)))
-tv_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/front_walk1.png")).convert()
+tv_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_front1.png")).convert()
 tv_walkfront1_sprite.set_colorkey(tv_walkfront1_sprite.get_at((0,0)))
-tv_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/front_walk2.png")).convert()
+tv_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_front2.png")).convert()
 tv_walkfront2_sprite.set_colorkey(tv_walkfront2_sprite.get_at((0,0)))
 tv_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_left1.png")).convert()
 tv_walkleft1_sprite.set_colorkey(tv_walkleft1_sprite.get_at((0,0)))
@@ -418,9 +464,9 @@ tv_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/wal
 tv_walkright1_sprite.set_colorkey(tv_walkright1_sprite.get_at((0,0)))
 tv_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_right2.png")).convert()
 tv_walkright2_sprite.set_colorkey(tv_walkright2_sprite.get_at((0,0)))
-tv_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/back_walk1.png")).convert()
+tv_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_back2.png")).convert()
 tv_walkback1_sprite.set_colorkey(tv_walkback1_sprite.get_at((0,0)))
-tv_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/back_walk2.png")).convert()
+tv_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/tv/walk_back2.png")).convert()
 tv_walkback2_sprite.set_colorkey(tv_walkback2_sprite.get_at((0,0)))
 
 
@@ -430,6 +476,13 @@ play_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 2.5 * screeny / 5 - 
 info_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 3.25 * screeny / 5 - button_size[1]/2) , button_size)
 exit_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 4 * screeny / 5 - button_size[1]/2) , button_size)
 
+character_button_size = (200,150)
+basic_button = pygame.Rect((85,700),character_button_size)
+ninja_button = pygame.Rect((295,700),character_button_size)
+tv_button = pygame.Rect((505,700),character_button_size)
+forest_button = pygame.Rect((715,700),character_button_size)
+
+
 game_size = (750, 750)
 game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
 game_window = pygame.Rect(game_window_pos, game_size)
@@ -438,7 +491,7 @@ margin = 9/2
 player_starting_pos = pygame.Vector2(game_window_pos)
 player_size = (50, 50)
 classe = 'Basic'
-player_obj = Perso(classe,tv_idle_sprite,player_starting_pos)
+player_obj = Perso(classe,player_starting_pos)
 player =  player_obj.rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
@@ -491,6 +544,7 @@ while playing:
                 if play_button.collidepoint(pygame.mouse.get_pos()):
                     in_game = True
                     game_over = False
+                    character_selected = False
                     score_number = 500
                     floor_number = 1
                     timer_counter = floor_timer(floor_number)
@@ -503,7 +557,7 @@ while playing:
                     player.topleft = player_starting_pos
                     player_speed, speed_malus = 200, 200
                     radius, piercing, strenght = 2,1,1
-                    current_anim = 0
+                    nb_frame = 0
                 
                 elif info_button.collidepoint(pygame.mouse.get_pos()):
                     in_menu += 1
@@ -525,17 +579,44 @@ while playing:
                 in_menu -= 1
                 pygame.time.wait(200)
             screen.blit(menu_background, (0, 0))
-            pygame.display.update()   
+            pygame.display.update()
+    
     else:
+        while not character_selected :
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            click = pygame.mouse.get_pressed()
+            if click[0] :
+                if basic_button.collidepoint(pygame.mouse.get_pos()):
+                    character_selected = True
+                    classe = 'Basic'
+                elif tv_button.collidepoint(pygame.mouse.get_pos()):
+                    character_selected = True
+                    classe = 'Tv'
+                elif forest_button.collidepoint(pygame.mouse.get_pos()):
+                    character_selected = True
+                    classe = 'Forest'
+                elif ninja_button.collidepoint(pygame.mouse.get_pos()):
+                    character_selected = True
+                    classe = 'Ninja'
+            screen.blit(basic_background, (0, 0))
+            pygame.draw.rect(basic_background, "purple", basic_button)
+            pygame.draw.rect(basic_background, "purple", tv_button)
+            pygame.draw.rect(basic_background, "purple", forest_button)
+            pygame.draw.rect(basic_background, "purple", ninja_button)
+            pygame.display.update()
+        player_obj = Perso(classe,player_starting_pos)
+        player =  player_obj.rect()
         while not game_over:
-            player_obj.set_sprite(tv_idle_sprite)
+            player_obj.idle()
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
                         timer_counter -= 1
                     else:
                         game_over = True
-                    current_anim = (current_anim + 1)%2
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and len(bomb_on_grid) < bomb_max_number and relative_pos(bomb_size, player) not in [bomb.get_pos() for bomb in bomb_on_grid]:
                         bomb_on_grid.append(Bomb(relative_pos(bomb_size, player)))
@@ -552,31 +633,37 @@ while playing:
                     elif key in [pygame.K_UP, pygame.K_DOWN]:
                         player_velocity.y += direction[key][1] * min(speed_malus, player_speed) * dt
             
-            
+            nb_frame = (nb_frame+1)%24
+            if nb_frame == 0 :
+                player_obj.next_anim()
+            current_direction = []
             for key, state in key_pressed_state.items():
                 if state and key in direction:
-                    if key == pygame.K_LEFT :
-                        if current_anim == 0 :
-                            player_obj.set_sprite(tv_walkleft1_sprite)
-                        elif current_anim == 1 :
-                            player_obj.set_sprite(tv_walkleft2_sprite)
-                    elif key == pygame.K_RIGHT :
-                        if current_anim == 0 :
-                            player_obj.set_sprite(tv_walkright1_sprite)
-                        elif current_anim == 1 :
-                            player_obj.set_sprite(tv_walkright2_sprite)
-                    elif key == pygame.K_UP :
-                        if current_anim == 0 :
-                            player_obj.set_sprite(tv_walkback1_sprite)
-                        elif current_anim == 1 :
-                            player_obj.set_sprite(tv_walkback2_sprite)
-                    elif key == pygame.K_DOWN :
-                        if current_anim == 0 :
-                            player_obj.set_sprite(tv_walkfront1_sprite)
-                        elif current_anim == 1 :
-                            player_obj.set_sprite(tv_walkfront2_sprite)
-            
-
+                    current_direction.append(key)
+            if pygame.K_DOWN in current_direction :
+                if player_obj.current_anim() == 0 :
+                    player_obj.set_sprite(3)
+                elif player_obj.current_anim() == 1 :
+                    player_obj.set_sprite(4)
+            elif pygame.K_UP in current_direction :
+                player_obj.set_orientation('Front')
+                if player_obj.current_anim() == 0 :
+                    player_obj.set_sprite(9)
+                elif player_obj.current_anim() == 1 :
+                    player_obj.set_sprite(10)
+            elif pygame.K_RIGHT in current_direction and not pygame.K_LEFT in current_direction :
+                player_obj.set_orientation('Right')
+                if player_obj.current_anim() == 0 :
+                    player_obj.set_sprite(5)
+                elif player_obj.current_anim() == 1 :
+                    player_obj.set_sprite(6)
+            elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction :
+                player_obj.set_orientation('Right')
+                if player_obj.current_anim() == 0 :
+                    player_obj.set_sprite(7)
+                elif player_obj.current_anim() == 1 :
+                    player_obj.set_sprite(8)            
+    
             temp_player = player.move(player_velocity.x, 0)
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list+[brick.rect() for brick in bricks_list]) == []:
                 player.x = temp_player.x
@@ -617,6 +704,7 @@ while playing:
                      speed_malus = 150
             if player_obj.get_timer_effect() >= 5:
                 player_obj.reset_effect()
+            if player_obj.get_timer_effect() == -1 :
                 speed_malus = player_speed
             
             if player.colliderect(floor_key):
@@ -705,7 +793,6 @@ while playing:
             
             pygame.display.update()
             clock.tick(FPS)
-        
         
         end_menu += 1
         if end_menu == 0:
