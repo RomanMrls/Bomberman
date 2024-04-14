@@ -267,7 +267,6 @@ def relative_pos(relative_rect_size, rect):
 def powerup_appear():
     rand = random.random()
     power_up = None
-    return "speed_up"
     if rand < 0.15:
         rand_power_up = random.random()
         if rand_power_up < 0.075:
@@ -407,7 +406,9 @@ current_dir = os.path.dirname(__file__)
 game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
 blank_background = pygame.image.load(os.path.join(current_dir, "image/blank_background.png")).convert()
+perso_background = pygame.image.load(os.path.join(current_dir, "image/perso_background.png")).convert()
 basic_background = pygame.image.load(os.path.join(current_dir, "image/basic_background.png")).convert()
+tv_background = pygame.image.load(os.path.join(current_dir, "image/tv_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
 
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
@@ -477,10 +478,10 @@ info_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 3.25 * screeny / 5 -
 exit_button = pygame.Rect((screenx / 2 - button_size[0]/2 , 4 * screeny / 5 - button_size[1]/2) , button_size)
 
 character_button_size = (200,150)
-basic_button = pygame.Rect((85,700),character_button_size)
-ninja_button = pygame.Rect((295,700),character_button_size)
-tv_button = pygame.Rect((505,700),character_button_size)
-forest_button = pygame.Rect((715,700),character_button_size)
+basic_button = pygame.Rect((75,700),character_button_size)
+ninja_button = pygame.Rect((290,700),character_button_size)
+tv_button = pygame.Rect((510,700),character_button_size)
+forest_button = pygame.Rect((725,700),character_button_size)
 
 
 game_size = (750, 750)
@@ -606,11 +607,11 @@ while playing:
                 if basic_button.collidepoint(pygame.mouse.get_pos()):
                     character_background = basic_background
                 elif tv_button.collidepoint(pygame.mouse.get_pos()):
-                    character_background = basic_background
+                    character_background = tv_background
                 elif forest_button.collidepoint(pygame.mouse.get_pos()):
-                    character_background = basic_background
+                    character_background = perso_background
                 elif ninja_button.collidepoint(pygame.mouse.get_pos()):
-                    character_background = basic_background
+                    character_background = perso_background
             screen.blit(character_background, (0, 0))
             pygame.draw.rect(character_background, "purple", basic_button)
             pygame.draw.rect(character_background, "purple", tv_button)
