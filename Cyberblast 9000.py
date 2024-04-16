@@ -59,6 +59,9 @@ class Powerup:
     def get_powerup_type(self):
         return self.__powerup_type
 
+    def use_effect(self,score_number):
+        return score_number - 10
+        
     def use(self, score_number, radius, strenght, piercing, player_speed, bomb_max_number):
         score_number -= 10
         if not self.__effect:
@@ -126,12 +129,20 @@ class Bomb:
         self.__timer = 0
         self.__timer_explosion = -1
         self.__explosion_trail = []
+        self.__out = False
 
     def rect(self):
         return self.__rect
 
     def get_pos(self):
         return self.__pos
+    
+    def test_if_out(self,player_obj):
+        if not self.__out:
+            self.__out = not(player_obj.colliderect(self.__rect))
+    
+    def got_out(self):
+        return self.__out
 
     def timer(self):
         return self.__timer
@@ -626,6 +637,7 @@ while playing:
             character_background = blank_background
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    save_score(score_dict)
                     pygame.quit()
                     sys.exit()
             click = pygame.mouse.get_pressed()
@@ -674,6 +686,10 @@ while playing:
                         key_pressed_state[event.key] = True
                 elif event.type == pygame.KEYUP:
                     key_pressed_state[event.key] = False
+                elif event.type == pygame.QUIT:
+                    save_score(score_dict)
+                    pygame.quit()
+                    sys.exit()
 
             player_velocity = pygame.Vector2(0, 0)
             current_direction = []
@@ -696,16 +712,19 @@ while playing:
                 player_obj.set_orientation('Right')
                 player_obj.set_sprite(5)
             elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
-                player_obj.set_orientation('Right')
+                player_obj.set_orientation('Left')
                 player_obj.set_sprite(7)
 
             temp_player = player.move(player_velocity.x, 0)
-            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == []:
+            [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
+            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.x = temp_player.x
 
             temp_player = player.move(0, player_velocity.y)
-            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == []:
+            [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
+            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.y = temp_player.y
+                
 
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
@@ -741,7 +760,7 @@ while playing:
                 player_obj.reset_effect()
             if player_obj.get_timer_effect() == -1:
                 speed_malus = player_speed
-
+            
             if player.colliderect(floor_key):
                 floor_key.update(0, 0, 0, 0)
                 key_picked_up = True
@@ -752,11 +771,10 @@ while playing:
                 trap, floor_key, bricks_list = gen_floor(floor_number, player.topleft, player_obj)
                 key_picked_up = False
                 timer_counter = floor_timer(floor_number)
-                del_props(powerup_on_grid,bomb_on_grid)
+                for bomb in bomb_on_grid:
+                    bomb_on_grid.remove(bomb)
                 for powerup in powerup_on_grid :
-                    powerup_on_grid.remover(powerup)
-                for bomb in bomb_on_grid :
-                    bomb_on_grid.remover(bomb)   
+                    powerup_on_grid.remove(powerup)  
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
                     if player.collidelistall(bomb.get_explosion_trail()):
@@ -765,9 +783,10 @@ while playing:
                 if player.colliderect(powerup.rect()):
                     if powerup.is_effect():
                         player_obj.give_effect(powerup.get_powerup_type())
+                        score_number = powerup.use_effect(score_number)
                     else:
                         score_number, radius, strenght, piercing, player_speed, bomb_max_number = powerup.use(score_number, radius, strenght, piercing, player_speed, bomb_max_number)
-                        powerup_on_grid.remove(powerup)
+                    powerup_on_grid.remove(powerup)
 
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
