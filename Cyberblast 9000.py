@@ -725,11 +725,10 @@ while playing:
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.y = temp_player.y
                 
-
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
                     bomb.timer_increment()
-                if bomb.timer() >= 1.5:
+                if bomb.timer() >= 2:
                     if player_obj.get_effect() == "poison":
                         bomb.explosion(bricks_list, 2, 1, 1)
                     else:
@@ -945,7 +944,7 @@ while playing:
             screen.blit(blank_background, (0, 0))
             display_scores(score_dict, player_name)
             pygame.display.update()
-            pygame.time.wait(4000)
+            pygame.time.wait(3500)
 
     dt = clock.tick(FPS) / 1000
 
