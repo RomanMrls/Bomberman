@@ -59,9 +59,6 @@ class Powerup:
     def get_powerup_type(self):
         return self.__powerup_type
 
-    def use_effect(self,score_number):
-        return score_number - 10
-        
     def use(self, score_number, radius, strenght, piercing, player_speed, bomb_max_number):
         score_number -= 10
         if not self.__effect:
@@ -129,20 +126,12 @@ class Bomb:
         self.__timer = 0
         self.__timer_explosion = -1
         self.__explosion_trail = []
-        self.__out = False
 
     def rect(self):
         return self.__rect
 
     def get_pos(self):
         return self.__pos
-    
-    def test_if_out(self,player_obj):
-        if not self.__out:
-            self.__out = not(player_obj.colliderect(self.__rect))
-    
-    def got_out(self):
-        return self.__out
 
     def timer(self):
         return self.__timer
@@ -453,55 +442,56 @@ screen_shade.fill((0, 0, 0, 100))
 
 current_dir = os.path.dirname(__file__)
 
-game_background = pygame.image.load(os.path.join(current_dir, "image/game_background.png"))
-menu_background = pygame.image.load(os.path.join(current_dir, "image/menu_background.png")).convert()
-blank_background = pygame.image.load(os.path.join(current_dir, "image/blank_background.png")).convert()
-perso_background = pygame.image.load(os.path.join(current_dir, "image/perso_background.png")).convert()
-krieger_background = pygame.image.load(os.path.join(current_dir, "image/krieger_background.png")).convert()
-huvud_background = pygame.image.load(os.path.join(current_dir, "image/huvud_background.png")).convert()
-arena_background = pygame.image.load(os.path.join(current_dir, "image/arena_background.png")).convert()
+game_background = pygame.image.load(os.path.join(current_dir, "image/background/game_background.png"))
+menu_background = pygame.image.load(os.path.join(current_dir, "image/background/menu_background.png")).convert()
+blank_background = pygame.image.load(os.path.join(current_dir, "image/background/blank_background.png")).convert()
+perso_background = pygame.image.load(os.path.join(current_dir, "image/background/perso_background.png")).convert()
+krieger_background = pygame.image.load(os.path.join(current_dir, "image/background/krieger_background.png")).convert()
+huvud_background = pygame.image.load(os.path.join(current_dir, "image/background/huvud_background.png")).convert()
+arena_background = pygame.image.load(os.path.join(current_dir, "image/background/arena_background.png")).convert()
 
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
 key_sprite.set_colorkey(key_sprite.get_at((0, 0)))
 trapdoor_sprite = pygame.image.load(os.path.join(current_dir, "image/trapdoor.png")).convert()
 
-brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/1hit_brick.png")).convert()
-brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_1_brick.png")).convert()
-brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/2hit_2_brick.png")).convert()
-brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_1_brick.png")).convert()
-brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_2_brick.png")).convert()
-brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/3hit_3_brick.png")).convert()
-indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/indestructible_brick.png")).convert()
+brick_1hit_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/1hit_brick.png")).convert()
+brick_2hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/2hit_1_brick.png")).convert()
+brick_2hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/2hit_2_brick.png")).convert()
+brick_3hit_1_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/3hit_1_brick.png")).convert()
+brick_3hit_2_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/3hit_2_brick.png")).convert()
+brick_3hit_3_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/3hit_3_brick.png")).convert()
+indestructible_brick_sprite = pygame.image.load(os.path.join(current_dir, "image/bricks/indestructible_brick.png")).convert()
 
-bomb_sprite = pygame.image.load(os.path.join(current_dir, "image/bomb_sprite.png")).convert()
+bomb_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion/bomb_sprite.png")).convert()
 bomb_sprite.set_colorkey(bomb_sprite.get_at((0, 0)))
-center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite0.png")).convert()
-horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite2.png")).convert()
-vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion_sprite1.png")).convert()
+center_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion/explosion_sprite0.png")).convert()
+horizontal_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion/explosion_sprite2.png")).convert()
+vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/explosion/explosion_sprite1.png")).convert()
 
-coin_sprite = pygame.image.load(os.path.join(current_dir, "image/coin_sprite.png")).convert()
+coin_sprite = pygame.image.load(os.path.join(current_dir, "image/items/coin_sprite.png")).convert()
 coin_sprite.set_colorkey(coin_sprite.get_at((0, 0)))
 
-rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/rangeup_sprite.png")).convert()
-strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtup_sprite.png")).convert()
-speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/speedup_sprite.png")).convert()
-bombup_sprite = pygame.image.load(os.path.join(current_dir, "image/bombup_sprite.png")).convert()
-piercingup_sprite = pygame.image.load(os.path.join(current_dir, "image/piercingup_sprite.png")).convert()
-shield_sprite = pygame.image.load(os.path.join(current_dir, "image/shield_sprite.png")).convert()
+rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/rangeup_sprite.png")).convert()
+strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/strenghtup_sprite.png")).convert()
+speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/speedup_sprite.png")).convert()
+bombup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/bombup_sprite.png")).convert()
+piercingup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/piercingup_sprite.png")).convert()
+shield_sprite = pygame.image.load(os.path.join(current_dir, "image/items/shield_sprite.png")).convert()
 
-rangedown_sprite = pygame.image.load(os.path.join(current_dir, "image/rangedown_sprite.png")).convert()
-strenghtdown_sprite = pygame.image.load(os.path.join(current_dir, "image/strenghtdown_sprite.png")).convert()
-speeddown_sprite = pygame.image.load(os.path.join(current_dir, "image/speeddown_sprite.png")).convert()
-bombdown_sprite = pygame.image.load(os.path.join(current_dir, "image/bombdown_sprite.png")).convert()
-piercingdown_sprite = pygame.image.load(os.path.join(current_dir, "image/piercingdown_sprite.png")).convert()
-poison_sprite = pygame.image.load(os.path.join(current_dir, "image/poison_sprite.png")).convert()
+rangedown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/rangedown_sprite.png")).convert()
+strenghtdown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/strenghtdown_sprite.png")).convert()
+speeddown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/speeddown_sprite.png")).convert()
+bombdown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/bombdown_sprite.png")).convert()
+piercingdown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/piercingdown_sprite.png")).convert()
+poison_sprite = pygame.image.load(os.path.join(current_dir, "image/items/poison_sprite.png")).convert()
 
-playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/play_bouton.png")).convert()
-extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/extra_bouton.png")).convert()
-quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/quit_bouton.png")).convert()
-kriegerbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger_bouton.png")).convert()
-bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui_bouton.png")).convert()
-huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud_bouton.png")).convert()
+playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/play_bouton.png")).convert()
+extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/extra_bouton.png")).convert()
+quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/quit_bouton.png")).convert()
+kriegerbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/krieger_bouton.png")).convert()
+bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/bosui_bouton.png")).convert()
+huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/huvud_bouton.png")).convert()
+sowabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/sowa_bouton.png")).convert()
 
 huvud_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/idle_front.png")).convert()
 huvud_idle_sprite.set_colorkey(huvud_idle_sprite.get_at((0, 0)))
@@ -637,7 +627,6 @@ while playing:
             character_background = blank_background
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    save_score(score_dict)
                     pygame.quit()
                     sys.exit()
             click = pygame.mouse.get_pressed()
@@ -666,7 +655,7 @@ while playing:
             screen.blit(character_background, (0, 0))            
             screen.blit(kriegerbouton_sprite, krieger_button)
             screen.blit(huvudbouton_sprite, huvud_button)
-            screen.blit(kriegerbouton_sprite, sowa_button)
+            screen.blit(sowabouton_sprite, sowa_button)
             screen.blit(bosuibouton_sprite, bosui_button)
             pygame.display.update()
         player_obj = Perso(classe, player_starting_pos)
@@ -686,10 +675,6 @@ while playing:
                         key_pressed_state[event.key] = True
                 elif event.type == pygame.KEYUP:
                     key_pressed_state[event.key] = False
-                elif event.type == pygame.QUIT:
-                    save_score(score_dict)
-                    pygame.quit()
-                    sys.exit()
 
             player_velocity = pygame.Vector2(0, 0)
             current_direction = []
@@ -712,23 +697,21 @@ while playing:
                 player_obj.set_orientation('Right')
                 player_obj.set_sprite(5)
             elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
-                player_obj.set_orientation('Left')
+                player_obj.set_orientation('Right')
                 player_obj.set_sprite(7)
 
             temp_player = player.move(player_velocity.x, 0)
-            [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
-            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
+            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == []:
                 player.x = temp_player.x
 
             temp_player = player.move(0, player_velocity.y)
-            [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
-            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
+            if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == []:
                 player.y = temp_player.y
-                
+
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
                     bomb.timer_increment()
-                if bomb.timer() >= 2:
+                if bomb.timer() >= 1.5:
                     if player_obj.get_effect() == "poison":
                         bomb.explosion(bricks_list, 2, 1, 1)
                     else:
@@ -759,7 +742,7 @@ while playing:
                 player_obj.reset_effect()
             if player_obj.get_timer_effect() == -1:
                 speed_malus = player_speed
-            
+
             if player.colliderect(floor_key):
                 floor_key.update(0, 0, 0, 0)
                 key_picked_up = True
@@ -770,10 +753,11 @@ while playing:
                 trap, floor_key, bricks_list = gen_floor(floor_number, player.topleft, player_obj)
                 key_picked_up = False
                 timer_counter = floor_timer(floor_number)
-                for bomb in bomb_on_grid:
-                    bomb_on_grid.remove(bomb)
+                del_props(powerup_on_grid,bomb_on_grid)
                 for powerup in powerup_on_grid :
-                    powerup_on_grid.remove(powerup)  
+                    powerup_on_grid.remover(powerup)
+                for bomb in bomb_on_grid :
+                    bomb_on_grid.remover(bomb)   
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
                     if player.collidelistall(bomb.get_explosion_trail()):
@@ -782,10 +766,9 @@ while playing:
                 if player.colliderect(powerup.rect()):
                     if powerup.is_effect():
                         player_obj.give_effect(powerup.get_powerup_type())
-                        score_number = powerup.use_effect(score_number)
                     else:
                         score_number, radius, strenght, piercing, player_speed, bomb_max_number = powerup.use(score_number, radius, strenght, piercing, player_speed, bomb_max_number)
-                    powerup_on_grid.remove(powerup)
+                        powerup_on_grid.remove(powerup)
 
             score = police.render(str(score_number), True, (255, 255, 255))
             score_rect = score.get_rect()
@@ -944,7 +927,7 @@ while playing:
             screen.blit(blank_background, (0, 0))
             display_scores(score_dict, player_name)
             pygame.display.update()
-            pygame.time.wait(3500)
+            pygame.time.wait(4000)
 
     dt = clock.tick(FPS) / 1000
 
