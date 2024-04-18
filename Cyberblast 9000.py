@@ -354,7 +354,7 @@ def relative_pos(relative_rect_size, rect , use = 0, grid_pos = None):
     if use == 0:
         return relative_rect_position
     else:
-        return rect_relative_grid_pos.y , rect_relative_grid_pos.x
+        return rect_relative_grid_pos.x , rect_relative_grid_pos.y
 
 
 def powerup_appear():
@@ -413,7 +413,7 @@ def gen_ennemy():
     ennemy_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
     ennemy_x, ennemy_y = relative_pos(ennemy_size,None,0,ennemy_grid_pos)
     ennemy = Ennemy((ennemy_x, ennemy_y) , 200 , "Test")
-    return ennemy, ennemy_grid_pos
+    return ennemy
 
 def gen_key():
     key_size = (25, 25)
@@ -494,7 +494,7 @@ def display_scores(dictionary, player_name=""):
 def convert_bricks_to_grid(bricks_list):
     bricks_grid = [[1 if (j%2 == 1 and i%2 == 1) else 0 for i in range(13)] for j in range(13)]
     for brick in bricks_list:
-        relative_gris_pos_y , relative_gris_pos_x  = relative_pos(brick_size, brick.rect(),1)
+        relative_gris_pos_x , relative_gris_pos_y  = relative_pos(brick_size, brick.rect(),1)
         bricks_grid[int(relative_gris_pos_x)][int(relative_gris_pos_y)] = 1
     return bricks_grid
 
@@ -731,12 +731,13 @@ while playing:
                     bomb_max_number = 1
                     explosion_on_grid = []
                     trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player_starting_pos, player_obj)
-                    ennemy,ennemy_grid_pos = gen_ennemy()
+                    ennemy = gen_ennemy()
                     while not ennemy.rect().collidelist(bricks_list):
-                        ennemy,ennemy_grid_pos = gen_ennemy()
+                        ennemy = gen_ennemy()
                         
-                    player_grid_y,player_grid_x = relative_pos(player_size, player ,1)
-                    path = a_star_pathfinding((int(ennemy_grid_pos[0]),int(ennemy_grid_pos[1])), (int(player_grid_x),int(player_grid_y)), bricks_grid)
+                    player_grid_x, player_grid_y = relative_pos(player_size, player ,1)
+                    ennemy_grid_x,ennemy_grid_y = relative_pos(ennemy_size, ennemy.rect() ,1)
+                    path = a_star_pathfinding((int(ennemy_grid_x),int(ennemy_grid_y)), (int(player_grid_x),int(player_grid_y)), bricks_grid)
                     if path:
                         if len(path) > 1:
                             ennemy.set_path(path)
