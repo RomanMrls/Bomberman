@@ -287,21 +287,74 @@ class Perso:
         else:
             self.__sprite = self.__animations[0]
 
+class Ennemy:
+    def __init__(self, pos, speed, classe):
+        self.__classe = classe
+        self.__rect = pygame.Rect(pos, ennemy_size)
+        self.__velocity = 1
+        self.__speed = 100
+        self.__x = pos[0]
+        self.__y = pos[1]
+        self.__target_x = pos[0]
+        self.__target_y = pos[1]
+        self.__path = []
+    
+    def rect(self):
+        return self.__rect
+    
+    def get_x(self):
+        return self.__x
+    
+    def update(self):
+        if self.__path:
+            if calculate_distance((self.__target_x, self.__target_y), self.__rect.topleft) <= 3 :
+                target = self.__path.pop(0)
+                self.__target_x, self.__target_y = relative_pos(ennemy_size, ennemy, 0, (target[0], target[1]))
+            
+            if self.__y < self.__target_y:
+                self.__y += self.__velocity * self.__speed * dt
+                if self.__y > self.__target_y:
+                    self.__y = self.__target_y
+            elif self.__y > self.__target_y:
+                self.__y -= self.__velocity * self.__speed * dt
+                if self.__y < self.__target_y:
+                    self.__y = self.__target_y
 
+            if self.__x < self.__target_x:
+                self.__x += self.__velocity * self.__speed * dt
+                if self.__x > self.__target_x:
+                    self.__x = self.__target_x
+            elif self.__x > self.__target_x:
+                self.__x -= self.__velocity * self.__speed * dt
+                if self.__x < self.__target_x:
+                    self.__x = self.__target_x
+            
+                
+        self.__rect.update((self.__x, self.__y), ennemy_size)
+
+    def set_path(self, path):
+        self.__path = path
+        target = self.__path.pop(0)
+        self.__target_x, self.__target_y = relative_pos(ennemy_size, None, 0, (target[0],target[1]))
+            
 # Functions
 
-def relative_pos(relative_rect_size, rect , use = 0):
+def relative_pos(relative_rect_size, rect , use = 0, grid_pos = None):
     # Calcule la position de la bombe en fonction de la position du joueur et de la grille
-    rect_center = pygame.Vector2(rect.center)
-    rect_relative_pos = rect_center - pygame.Vector2(game_window.topleft)
-    grid_square_size = pygame.Vector2(brick_size[0] + 2, brick_size[1] + 2)
-    rect_relative_grid_pos = rect_relative_pos.elementwise() // grid_square_size
+    if grid_pos == None:
+        rect_center = pygame.Vector2(rect.center)
+        rect_relative_pos = rect_center - pygame.Vector2(game_window.topleft)
+        grid_square_size = pygame.Vector2(brick_size[0] + 2, brick_size[1] + 2)
+        rect_relative_grid_pos = rect_relative_pos.elementwise() // grid_square_size
+    else:
+        grid_square_size = pygame.Vector2(brick_size[0] + 2, brick_size[1] + 2)
+        rect_relative_grid_pos = pygame.Vector2(grid_pos[0],grid_pos[1])
     grid_square_top_left = rect_relative_grid_pos.elementwise() * grid_square_size + pygame.Vector2(margin, margin)
     relative_rect_position = grid_square_top_left + pygame.Vector2(game_window.topleft) + pygame.Vector2(((brick_size[0] - relative_rect_size[0] + 2) / 2, (brick_size[1] - relative_rect_size[1] + 2) / 2))
-    if use==0:
+    if use == 0:
         return relative_rect_position
     else:
-        return rect_relative_grid_pos.x , rect_relative_grid_pos.y
+        return rect_relative_grid_pos.y , rect_relative_grid_pos.x
 
 
 def powerup_appear():
@@ -342,7 +395,6 @@ def brick_durability(floor_number):
     else:
         return 1
 
-
 def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
     # Génère une liste de briques
     bricks_list = []
@@ -355,8 +407,13 @@ def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
                 bricks_list.append(brick)
     player_temp_rect = pygame.Rect(player_pos, (brick_size[0] * 2, brick_size[1] * 2))
     bricks_list = [brick for brick in bricks_list if not player_temp_rect.colliderect(brick.rect())]
-    return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
+    return random.sample(bricks_list, 20) #min(num_bricks, len(bricks_list))
 
+def gen_ennemy():
+    ennemy_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
+    ennemy_x, ennemy_y = relative_pos(ennemy_size,None,0,ennemy_grid_pos)
+    ennemy = Ennemy((ennemy_x, ennemy_y) , 200 , "Test")
+    return ennemy, ennemy_grid_pos
 
 def gen_key():
     key_size = (25, 25)
@@ -366,7 +423,6 @@ def gen_key():
     floor_key = pygame.Rect((key_x, key_y), key_size)
     return floor_key
 
-
 def gen_floor(floor_number, player_pos, player_obj):
     # Génère la structure de l'étage
     floor_key = gen_key()
@@ -374,14 +430,13 @@ def gen_floor(floor_number, player_pos, player_obj):
         floor_key = gen_key()
     bricks_list = gen_bricks(brick_number(floor_number), player_pos, floor_key, floor_number)
     trap = ((random.choice(bricks_list)).rect()).copy()
-    return trap, floor_key, bricks_list
-
+    bricks_grid = convert_bricks_to_grid(bricks_list)
+    return trap, floor_key, bricks_list, bricks_grid
 
 def floor_timer(floor_number):
     floor_time = 180 - floor_number - floor_number // 2
     floor_time = max(floor_time, 30)
     return floor_time
-
 
 def timer_str(timer_counter):
     # Convertit le compteur de temps en une chaîne de caractères au format "mm:ss"
@@ -399,13 +454,11 @@ def timer_str(timer_counter):
             timer_str = '0' + str(timer_secondes)
     return timer_str
 
-
 def save_score(dictionary, fn="./score.txt", top_n=10):
     with open(fn, "w") as f:
         sorted_scores = sorted(dictionary.items(), key=lambda x: int(x[1][0]), reverse=True)
         for idx, (name, score) in enumerate(sorted_scores[:top_n]):
             f.write(f"{name}: score:{score[0]}, floor:{score[1]}\n")
-
 
 def load_score(fn="./score.txt"):
     hs = {}
@@ -421,7 +474,6 @@ def load_score(fn="./score.txt"):
     except FileNotFoundError:
         return {}
     return hs
-
 
 def display_scores(dictionary, player_name=""):
     text_surface = police4.render("Scoreboard", True, (255, 255, 255))
@@ -442,11 +494,70 @@ def display_scores(dictionary, player_name=""):
 def convert_bricks_to_grid(bricks_list):
     bricks_grid = [[1 if (j%2 == 1 and i%2 == 1) else 0 for i in range(13)] for j in range(13)]
     for brick in bricks_list:
-        relative_gris_pos_x , relative_gris_pos_y  = relative_pos(brick_size, brick.rect(),1)
-        print(relative_gris_pos_x , relative_gris_pos_y,end = " ")
+        relative_gris_pos_y , relative_gris_pos_x  = relative_pos(brick_size, brick.rect(),1)
         bricks_grid[int(relative_gris_pos_x)][int(relative_gris_pos_y)] = 1
     return bricks_grid
+
+def calculate_distance(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def heuristic_cost_estimate(start, goal):
+    return math.sqrt((goal[0] - start[0])**2 + (goal[1] - start[1])**2)
+
+def get_neighbors(cell, grid):
+    height = len(grid)
+    width = len(grid[0])
+    i, j = cell
+    neighbors = []
+    
+    for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        new_i, new_j = i + di, j + dj
+        if 0 <= new_i < height and 0 <= new_j < width and grid[new_i][new_j] != 1:
+            neighbors.append((new_i, new_j))
+    
+    return neighbors
+
+def a_star_pathfinding(start, goal, grid):
+    open_list = [start]
+    closed_list = []
+    came_from = {}
+    
+    g_score = {(i, j): float('inf') for i in range(len(grid)) for j in range(len(grid[0]))}
+    g_score[start] = 0
+    
+    f_score = {(i, j): float('inf') for i in range(len(grid)) for j in range(len(grid[0]))}
+    f_score[start] = heuristic_cost_estimate(start, goal)
+    
+    while open_list:
+        current = min(open_list, key=lambda cell: f_score[cell])
         
+        if current == goal:
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.insert(0, current)
+            return path
+        
+        open_list.remove(current)
+        closed_list.append(current)
+        
+        for neighbor in get_neighbors(current, grid):
+            if neighbor in closed_list:
+                continue
+            
+            tentative_g_score = g_score[current] + 1
+            
+            if tentative_g_score < g_score.get(neighbor, float('inf')):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
+                
+                if neighbor not in open_list:
+                    open_list.append(neighbor)
+    
+    return None
         
 # Initializations
 
@@ -559,6 +670,7 @@ player = player_obj.rect()
 
 direction = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0), pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
+ennemy_size = (50, 50)
 explosion_size = (57, 57)
 bomb_size = (25, 25)
 key_size = (25, 25)
@@ -576,6 +688,8 @@ clock = pygame.time.Clock()
 clock.tick(FPS)
 
 pygame.time.set_timer(pygame.USEREVENT, 1000)
+
+grid_width = 13
 
 police = pygame.font.Font('PressStart2P.ttf', 16)
 police2 = pygame.font.Font('PressStart2P.ttf', 35)
@@ -616,8 +730,16 @@ while playing:
                     bomb_on_grid = []
                     bomb_max_number = 1
                     explosion_on_grid = []
-                    trap, floor_key, bricks_list = gen_floor(floor_number, player_starting_pos, player_obj)
-                    print(convert_bricks_to_grid(bricks_list))
+                    trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player_starting_pos, player_obj)
+                    ennemy,ennemy_grid_pos = gen_ennemy()
+                    while not ennemy.rect().collidelist(bricks_list):
+                        ennemy,ennemy_grid_pos = gen_ennemy()
+                        
+                    player_grid_y,player_grid_x = relative_pos(player_size, player ,1)
+                    path = a_star_pathfinding((int(ennemy_grid_pos[0]),int(ennemy_grid_pos[1])), (int(player_grid_x),int(player_grid_y)), bricks_grid)
+                    if path:
+                        if len(path) > 1:
+                            ennemy.set_path(path)
                     player.topleft = player_starting_pos
                     player_speed, speed_malus = 200, 200
                     radius, piercing, strenght = 2, 1, 1
@@ -737,6 +859,8 @@ while playing:
             [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.y = temp_player.y
+            
+            ennemy.update()
                 
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
@@ -780,7 +904,7 @@ while playing:
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
                 score_number += 1000
-                trap, floor_key, bricks_list = gen_floor(floor_number, player.topleft, player_obj)
+                trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player.topleft, player_obj)
                 key_picked_up = False
                 timer_counter = floor_timer(floor_number)
                 for bomb in bomb_on_grid:
@@ -857,6 +981,7 @@ while playing:
                                 game_background.blit(vertical_explosion_sprite, explosion)
                         else:
                             game_background.blit(horizontal_explosion_sprite, explosion)
+            pygame.draw.rect(game_background, "red", ennemy.rect())
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
             screen.blit(timer, timer_pos)
@@ -913,7 +1038,6 @@ while playing:
                     game_background.blit(key_sprite, floor_key)
                 for powerup in powerup_on_grid:
                     game_background.blit(powerup.sprite(), powerup.rect())
-                    print('nullos')
                 if player_obj.get_effect() == "poison":
                     pygame.draw.rect(game_background, "purple", player)
                 else:
