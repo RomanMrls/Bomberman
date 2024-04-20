@@ -586,6 +586,7 @@ blank_background = pygame.image.load(os.path.join(current_dir, "image/background
 perso_background = pygame.image.load(os.path.join(current_dir, "image/background/perso_background.png")).convert()
 krieger_background = pygame.image.load(os.path.join(current_dir, "image/background/krieger_background.png")).convert()
 huvud_background = pygame.image.load(os.path.join(current_dir, "image/background/huvud_background.png")).convert()
+bosui_background = pygame.image.load(os.path.join(current_dir, "image/background/bosui_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/background/arena_background.png")).convert()
 
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
@@ -630,6 +631,7 @@ kriegerbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton
 bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/bosui_bouton.png")).convert()
 huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/huvud_bouton.png")).convert()
 sowabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/sowa_bouton.png")).convert()
+select_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/select_bouton.png")).convert_alpha()
 
 huvud_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/idle_front.png")).convert()
 huvud_idle_sprite.set_colorkey(huvud_idle_sprite.get_at((0, 0)))
@@ -658,10 +660,11 @@ exit_button = pygame.Rect((screenx / 2 - button_size[0] / 2, 4 * screeny / 5 - b
 
 character_button_size = (200, 150)
 character_button_size_buffed = (230, 150) 
-krieger_button = pygame.Rect((screenx / -8 + character_button_size[0], screeny / 9 + 4 * character_button_size[1]), character_button_size_buffed)
-bosui_button = pygame.Rect((9*screenx / 100 + character_button_size[0], screeny / 9 + 4 * character_button_size[1]), character_button_size_buffed)
-huvud_button = pygame.Rect((31*screenx / 100 + character_button_size[0], screeny / 9 + 4 * character_button_size[1]), character_button_size_buffed)
-sowa_button = pygame.Rect((21*screenx / 40 + character_button_size[0], screeny / 9 + 4 * character_button_size[1]), character_button_size)
+krieger_button = pygame.Rect((75,50), character_button_size_buffed)
+bosui_button = pygame.Rect((290,50), character_button_size_buffed)
+huvud_button = pygame.Rect((510,50), character_button_size_buffed)
+sowa_button = pygame.Rect((725,50), character_button_size)
+start_button = pygame.Rect((screenx / 2 - button_size[0] / 2,750), button_size)
 
 game_size = (750, 750)
 game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
@@ -768,10 +771,10 @@ while playing:
                 pygame.time.wait(200)
             screen.blit(menu_background, (0, 0))
             pygame.display.update()
-
     else:
+        character_background = blank_background
+        selected_buton = None
         while not character_selected:
-            character_background = blank_background
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     save_score(score_dict)
@@ -780,32 +783,33 @@ while playing:
             click = pygame.mouse.get_pressed()
             if click[0]:
                 if krieger_button.collidepoint(pygame.mouse.get_pos()):
-                    character_selected = True
-                    classe = 'krieger'
-                elif huvud_button.collidepoint(pygame.mouse.get_pos()):
-                    character_selected = True
-                    classe = 'huvud'
-                elif sowa_button.collidepoint(pygame.mouse.get_pos()):
-                    character_selected = True
-                    classe = 'sowa'
-                elif bosui_button.collidepoint(pygame.mouse.get_pos()):
-                    character_selected = True
-                    classe = 'bosui'
-            if not click[0]:
-                if krieger_button.collidepoint(pygame.mouse.get_pos()):
                     character_background = krieger_background
+                    classe = 'krieger'
+                    selected_buton = krieger_button
                 elif huvud_button.collidepoint(pygame.mouse.get_pos()):
                     character_background = huvud_background
+                    classe = 'huvud'
+                    selected_buton = huvud_button
                 elif sowa_button.collidepoint(pygame.mouse.get_pos()):
                     character_background = perso_background
+                    classe = 'sowa'
+                    selected_buton = sowa_button
                 elif bosui_button.collidepoint(pygame.mouse.get_pos()):
-                    character_background = perso_background
+                    character_background = bosui_background
+                    selected_buton = bosui_button
+                    classe = 'bosui'
+                elif start_button.collidepoint(pygame.mouse.get_pos()):
+                    character_selected = True
             screen.blit(character_background, (0, 0))            
             screen.blit(kriegerbouton_sprite, krieger_button)
             screen.blit(huvudbouton_sprite, huvud_button)
             screen.blit(sowabouton_sprite, sowa_button)
             screen.blit(bosuibouton_sprite, bosui_button)
+            screen.blit(playbouton_sprite, start_button)
+            if selected_buton != None :
+                screen.blit(select_sprite, selected_buton)
             pygame.display.update()
+            clock.tick(FPS)
         player_obj = Perso(classe, player_starting_pos)
         player = player_obj.rect()
         while not game_over:
@@ -991,7 +995,7 @@ while playing:
             screen.blit(score, score_pos)
             screen.blit(timer, timer_pos)
             screen.blit(floor, floor_pos)
-
+            print(dt)
             pygame.display.update()
             clock.tick(FPS)
 
