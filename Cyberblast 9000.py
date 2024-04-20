@@ -580,13 +580,14 @@ screen_shade.fill((0, 0, 0, 100))
 
 current_dir = os.path.dirname(__file__)
 
+
 game_background = pygame.image.load(os.path.join(current_dir, "image/background/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/background/menu_background.png")).convert()
 blank_background = pygame.image.load(os.path.join(current_dir, "image/background/blank_background.png")).convert()
-perso_background = pygame.image.load(os.path.join(current_dir, "image/background/perso_background.png")).convert()
 krieger_background = pygame.image.load(os.path.join(current_dir, "image/background/krieger_background.png")).convert()
 huvud_background = pygame.image.load(os.path.join(current_dir, "image/background/huvud_background.png")).convert()
 bosui_background = pygame.image.load(os.path.join(current_dir, "image/background/bosui_background.png")).convert()
+sowa_background = pygame.image.load(os.path.join(current_dir, "image/background/sowa_background.png")).convert()
 arena_background = pygame.image.load(os.path.join(current_dir, "image/background/arena_background.png")).convert()
 
 key_sprite = pygame.image.load(os.path.join(current_dir, "image/key.png")).convert()
@@ -609,14 +610,12 @@ vertical_explosion_sprite = pygame.image.load(os.path.join(current_dir, "image/e
 
 coin_sprite = pygame.image.load(os.path.join(current_dir, "image/items/coin_sprite.png")).convert()
 coin_sprite.set_colorkey(coin_sprite.get_at((0, 0)))
-
 rangeup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/rangeup_sprite.png")).convert()
 strenghtup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/strenghtup_sprite.png")).convert()
 speedup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/speedup_sprite.png")).convert()
 bombup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/bombup_sprite.png")).convert()
 piercingup_sprite = pygame.image.load(os.path.join(current_dir, "image/items/piercingup_sprite.png")).convert()
 shield_sprite = pygame.image.load(os.path.join(current_dir, "image/items/shield_sprite.png")).convert()
-
 rangedown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/rangedown_sprite.png")).convert()
 strenghtdown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/strenghtdown_sprite.png")).convert()
 speeddown_sprite = pygame.image.load(os.path.join(current_dir, "image/items/speeddown_sprite.png")).convert()
@@ -791,7 +790,7 @@ while playing:
                     classe = 'huvud'
                     selected_buton = huvud_button
                 elif sowa_button.collidepoint(pygame.mouse.get_pos()):
-                    character_background = perso_background
+                    character_background = sowa_background
                     classe = 'sowa'
                     selected_buton = sowa_button
                 elif bosui_button.collidepoint(pygame.mouse.get_pos()):
