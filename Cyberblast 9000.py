@@ -303,11 +303,11 @@ class Ennemy:
     def rect(self):
         return self.__rect
     
-    def get_x(self):
-        return self.__x
+    def get_path(self):
+        return self.__path
     
     def update(self):
-        if self.__path or (self.__target_x, self.__target_y) != (self.__x,self.__y):
+        if self.__path != [] or (self.__target_x, self.__target_y) != (self.__x,self.__y):
             if pygame.Rect(self.__rect.topleft, (1,1)).collidepoint((self.__target_x,self.__target_y)) :
                 self.__target = self.__path.pop(0)
                 self.__target_x, self.__target_y = relative_pos(ennemy_size, ennemy, 0, (self.__target[0], self.__target[1]))
@@ -341,10 +341,9 @@ class Ennemy:
     
     def set_path(self, player, bricks_grid):
         player_grid_x, player_grid_y = relative_pos(player_size, player ,1)
-        ennemy_grid_x,ennemy_grid_y = relative_pos(ennemy_size, ennemy.rect() ,1)
+        ennemy_grid_x,ennemy_grid_y = relative_pos(ennemy_size, self.__rect ,1)
         self.__path = a_star_pathfinding((int(ennemy_grid_x),int(ennemy_grid_y)), (int(player_grid_x),int(player_grid_y)), bricks_grid)
-        print(self.__path)
-        if self.__path:
+        if self.__path != []:
             self.__target = self.__path.pop(0)
             self.__target_x, self.__target_y = relative_pos(ennemy_size, None, 0, (self.__target[0], self.__target[1]))
             
@@ -418,13 +417,27 @@ def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
                 bricks_list.append(brick)
     player_temp_rect = pygame.Rect(player_pos, (brick_size[0] * 2, brick_size[1] * 2))
     bricks_list = [brick for brick in bricks_list if not player_temp_rect.colliderect(brick.rect())]
-    return random.sample(bricks_list, 20) #min(num_bricks, len(bricks_list))
+    return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
 
-def gen_ennemy():
-    ennemy_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
-    ennemy_x, ennemy_y = relative_pos(ennemy_size,None,0,ennemy_grid_pos)
-    ennemy = Ennemy((ennemy_x, ennemy_y) , 200 , "Test")
-    return ennemy
+def gen_ennemy(player, bricks_list, floor_number):
+    p = 1 - ((math.exp(-floor_number)) ** 0.025)
+    print(p)
+    ennemies_list = list()
+    bricks_grid = convert_bricks_to_grid(bricks_list)
+    available_coords = [[((i*2, j*2) if ((i*2, j*2) not in bricks_grid) else None) for i in range(7)] for j in range(7)]
+    available_coords = sum(available_coords, [])
+    for _ in range (random.randint(1, max(1, floor_number//10))):
+        if available_coords:
+            rand = random.random()
+            if rand < p:
+                ennemy_grid_pos = random.choice(available_coords)
+                available_coords.remove(ennemy_grid_pos)
+                ennemy_x, ennemy_y = relative_pos(ennemy_size, None, 0, ennemy_grid_pos)
+                ennemy = Ennemy((ennemy_x, ennemy_y) , 150 , "Test")
+                ennemy.set_path(player,bricks_grid)
+                if len(ennemy.get_path()) > 7 or ennemy.get_path() == []:
+                    ennemies_list.append(ennemy)
+    return ennemies_list
 
 def gen_key():
     key_size = (25, 25)
@@ -441,8 +454,8 @@ def gen_floor(floor_number, player_pos, player_obj):
         floor_key = gen_key()
     bricks_list = gen_bricks(brick_number(floor_number), player_pos, floor_key, floor_number)
     trap = ((random.choice(bricks_list)).rect()).copy()
-    bricks_grid = convert_bricks_to_grid(bricks_list)
-    return trap, floor_key, bricks_list, bricks_grid
+    ennemies_list = gen_ennemy(player, bricks_list, floor_number)
+    return trap, floor_key, bricks_list, ennemies_list
 
 def floor_timer(floor_number):
     floor_time = 180 - floor_number - floor_number // 2
@@ -563,7 +576,7 @@ def a_star_pathfinding(start, goal, grid):
                 if neighbor not in open_list:
                     open_list.append(neighbor)
     
-    return None
+    return []
         
 # Initializations
 
@@ -731,19 +744,15 @@ while playing:
                     game_over = False
                     character_selected = False
                     score_number = 500
-                    floor_number = 1
+                    floor_number = 100
                     timer_counter = floor_timer(floor_number)
                     key_pressed_state = {}
                     powerup_on_grid = []
                     bomb_on_grid = []
                     bomb_max_number = 1
                     explosion_on_grid = []
-                    trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player_starting_pos, player_obj)
-                    ennemy = gen_ennemy()
-                    while not ennemy.rect().collidelist(bricks_list):
-                        ennemy = gen_ennemy()
-                    
-                    ennemy.set_path(player,bricks_grid)
+                    trap, floor_key, bricks_list, ennemies_list = gen_floor(floor_number, player_starting_pos, player_obj)
+                    bricks_grid = convert_bricks_to_grid(bricks_list)
                     player.topleft = player_starting_pos
                     player_speed, speed_malus = 200, 200
                     radius, piercing, strenght = 2, 1, 1
@@ -865,9 +874,11 @@ while playing:
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.y = temp_player.y
             
-            if ennemy.target_reached():
-                ennemy.set_path(player,bricks_grid)
-            ennemy.update()
+            bricks_grid = convert_bricks_to_grid(bricks_list)
+            for ennemy in ennemies_list:
+                if ennemy.target_reached():
+                    ennemy.set_path(player,bricks_grid)
+                ennemy.update()
                 
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
@@ -911,7 +922,7 @@ while playing:
             if player.colliderect(trap) and key_picked_up:
                 floor_number += 1
                 score_number += 1000
-                trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player.topleft, player_obj)
+                trap, floor_key, bricks_list, ennemies_list = gen_floor(floor_number, player.topleft, player_obj)
                 key_picked_up = False
                 timer_counter = floor_timer(floor_number)
                 for bomb in bomb_on_grid:
@@ -988,15 +999,14 @@ while playing:
                                 game_background.blit(vertical_explosion_sprite, explosion)
                         else:
                             game_background.blit(horizontal_explosion_sprite, explosion)
-            pygame.draw.rect(game_background, "red", ennemy.rect())
-            pygame.draw.rect(game_background, "yellow", ennemy.get_target())
+            for ennemy in ennemies_list:
+                pygame.draw.rect(game_background, "red", ennemy.rect())
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
             screen.blit(timer, timer_pos)
             screen.blit(floor, floor_pos)
-            print(dt)
             pygame.display.update()
-            clock.tick(FPS)
+            dt = clock.tick(FPS) / 1000
 
         end_menu += 1
         if end_menu == 0:
@@ -1091,8 +1101,6 @@ while playing:
             display_scores(score_dict, player_name)
             pygame.display.update()
             pygame.time.wait(3500)
-
-    dt = clock.tick(FPS) / 1000
 
 pygame.quit()
 sys.exit()
