@@ -192,16 +192,14 @@ class Bomb:
 
 """
 animations[0] = Regard de face
-animations[1] = Regard 3/4 droite
-animations[2] = Regard 3/4 gauche
-animations[3] = Marche devant 1
-animations[4] = Marche devant 2
-animations[5] = Marche droite 1
-animations[6] = Marche droite 2
-animations[7] = Marche gauche 1
-animations[8] = Marche gauche 2
-animations[9] = Marche derrière 1
-animations[10] = Marche derrière 2
+animations[1] = Marche devant 1
+animations[2] = Marche devant 2
+animations[3] = Marche droite 1
+animations[4] = Marche droite 2
+animations[5] = Marche gauche 1
+animations[6] = Marche gauche 2
+animations[7] = Marche derrière 1
+animations[8] = Marche derrière 2
 """
 
 
@@ -210,34 +208,38 @@ class Perso:
         self.__class = classe
         '''
         if classe == 'krieger':
-            self.__animations = [krieger_idle_face_sprite, krieger_idle_right_sprite, krieger_idle_left_sprite,
-                                 krieger_walkfront1_sprite, krieger_walkfront2_sprite, krieger_walkright1_sprite,
-                                 krieger_walkright2_sprite, krieger_walkleft1_sprite, krieger_walkleft2_sprite,
-                                 krieger_walkback1_sprite, krieger_walkback2_sprite]
+            self.__animations = [krieger_idle_sprite, krieger_walkfront1_sprite, krieger_walkfront2_sprite,
+                                 krieger_walkright1_sprite, krieger_walkright2_sprite, krieger_walkleft1_sprite,
+                                 krieger_walkleft2_sprite, krieger_walkback1_sprite, krieger_walkback2_sprite]
         elif classe == 'huvud':
-            self.__animations = [huvud_idle_face_sprite, huvud_idle_right_sprite, huvud_idle_left_sprite, huvud_walkfront1_sprite,
-                                 huvud_walkfront2_sprite, huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite,
+            self.__animations = [huvud_idle_sprite, huvud_walkfront1_sprite, huvud_walkfront2_sprite,
+                                 huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite,
                                  huvud_walkleft2_sprite, huvud_walkback1_sprite, huvud_walkback2_sprite]
         elif classe == 'bosui':
-            self.__animations = [bosui_idle_face_sprite, bosui_idle_right_sprite, bosui_idle_left_sprite,
-                                 bosui_walkfront1_sprite, bosui_walkfront2_sprite, bosui_walkright1_sprite,
-                                 bosui_walkright2_sprite, bosui_walkleft1_sprite, bosui_walkleft2_sprite,
-                                 bosui_walkback1_sprite, bosui_walkback2_sprite]
+            self.__animations = [bosui_idle_sprite, bosui_walkfront1_sprite, bosui_walkfront2_sprite,
+                                 bosui_walkright1_sprite, bosui_walkright2_sprite, bosui_walkleft1_sprite,
+                                 bosui_walkleft2_sprite, bosui_walkback1_sprite, bosui_walkback2_sprite]
         elif classe == 'sowa':
-            self.__animations = [sowa_idle_face_sprite, sowa_idle_right_sprite, sowa_idle_left_sprite,
-                                 sowa_walkfront1_sprite, sowa_walkfront2_sprite, sowa_walkright1_sprite,
-                                 sowa_walkright2_sprite, sowa_walkleft1_sprite, sowa_walkleft2_sprite,
-                                 sowa_walkback1_sprite, sowa_walkback2_sprite]
+            self.__animations = [sowa_idle_sprite, sowa_walkfront1_sprite, sowa_walkfront2_sprite,
+                                 sowa_walkright1_sprite, sowa_walkright2_sprite, sowa_walkleft1_sprite,
+                                 sowa_walkleft2_sprite, sowa_walkback1_sprite, sowa_walkback2_sprite]
         '''
-        self.__animations = [huvud_idle_sprite, huvud_idle_sprite, huvud_idle_sprite, huvud_walkfront1_sprite, huvud_walkfront2_sprite,
-                             huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite, huvud_walkleft2_sprite,
-                             huvud_walkback1_sprite, huvud_walkback2_sprite]
+        if classe == 'krieger':
+            self.__animations = [krieger_sprite]*9
+        elif classe == 'huvud':
+            self.__animations = [huvud_idle_sprite, huvud_walkfront1_sprite, huvud_walkfront2_sprite,
+                                 huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite,
+                                 huvud_walkleft2_sprite, huvud_walkback1_sprite, huvud_walkback2_sprite]
+        elif classe == 'bosui':
+            self.__animations = [bosui_sprite]*9
+        elif classe == 'sowa':
+            self.__animations = [sowa_sprite]*9
+        
         self.__rect = pygame.Rect(pos, player_size)
         self.__effect = None
         self.__timer_effect = -1
         self.__timer_capa = -1
         self.__sprite = self.__animations[0]
-        self.__orientation = 'Front'
         self.__current_anim = 0
 
     def give_effect(self, effect):
@@ -263,9 +265,6 @@ class Perso:
     def current_anim(self):
         return self.__current_anim
 
-    def orientation(self):
-        return self.__orientation
-
     def sprite(self):
         return self.__sprite
 
@@ -276,16 +275,6 @@ class Perso:
         if nb_frame == 0:
             self.__current_anim = (self.__current_anim + 1) % 2
 
-    def set_orientation(self, orientation):
-        self.__orientation = orientation
-
-    def idle(self):
-        if self.__orientation == 'Right':
-            self.__sprite = self.__animations[1]
-        elif self.__orientation == 'Left':
-            self.__sprite = self.__animations[2]
-        else:
-            self.__sprite = self.__animations[0]
 
 class Ennemy:
     def __init__(self, pos, speed, classe):
@@ -418,7 +407,7 @@ def gen_bricks(num_bricks, player_pos, floor_key, floor_number):
                 bricks_list.append(brick)
     player_temp_rect = pygame.Rect(player_pos, (brick_size[0] * 2, brick_size[1] * 2))
     bricks_list = [brick for brick in bricks_list if not player_temp_rect.colliderect(brick.rect())]
-    return random.sample(bricks_list, 20) #min(num_bricks, len(bricks_list))
+    return random.sample(bricks_list, min(num_bricks, len(bricks_list)))
 
 def gen_ennemy():
     ennemy_grid_pos = (random.randint(0, 6) * 2, random.randint(0, 6) * 2)
@@ -582,7 +571,7 @@ pygame.display.set_caption('Cyberblast 9000')
 screenx = 1000
 screeny = 900
 
-screen_shade = pygame.Surface((screenx, screeny)).convert_alpha()
+screen_shade = pygame.Surface((screenx, screeny)).convert()
 screen_shade.fill((0, 0, 0, 100))
 
 current_dir = os.path.dirname(__file__)
@@ -667,24 +656,86 @@ else :
 
 select_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/select_bouton.png")).convert_alpha()
 
-huvud_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/idle_front.png")).convert()
+huvud_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/idle_front.png")).convert_alpha()
 huvud_idle_sprite.set_colorkey(huvud_idle_sprite.get_at((0, 0)))
-huvud_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_front1.png")).convert()
+huvud_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_front1.png")).convert_alpha()
 huvud_walkfront1_sprite.set_colorkey(huvud_walkfront1_sprite.get_at((0, 0)))
-huvud_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_front2.png")).convert()
+huvud_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_front2.png")).convert_alpha()
 huvud_walkfront2_sprite.set_colorkey(huvud_walkfront2_sprite.get_at((0, 0)))
-huvud_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_left1.png")).convert()
+huvud_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_left1.png")).convert_alpha()
 huvud_walkleft1_sprite.set_colorkey(huvud_walkleft1_sprite.get_at((0, 0)))
-huvud_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_left2.png")).convert()
+huvud_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_left2.png")).convert_alpha()
 huvud_walkleft2_sprite.set_colorkey(huvud_walkleft2_sprite.get_at((0, 0)))
-huvud_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_right1.png")).convert()
+huvud_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_right1.png")).convert_alpha()
 huvud_walkright1_sprite.set_colorkey(huvud_walkright1_sprite.get_at((0, 0)))
-huvud_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_right2.png")).convert()
+huvud_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_right2.png")).convert_alpha()
 huvud_walkright2_sprite.set_colorkey(huvud_walkright2_sprite.get_at((0, 0)))
-huvud_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_back1.png")).convert()
+huvud_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_back1.png")).convert_alpha()
 huvud_walkback1_sprite.set_colorkey(huvud_walkback1_sprite.get_at((0, 0)))
-huvud_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_back2.png")).convert()
+huvud_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_back2.png")).convert_alpha()
 huvud_walkback2_sprite.set_colorkey(huvud_walkback2_sprite.get_at((0, 0)))
+
+'''
+krieger_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/idle_front.png")).convert_alpha()
+krieger_idle_sprite.set_colorkey(krieger_idle_sprite.get_at((0, 0)))
+krieger_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_front1.png")).convert_alpha()
+krieger_walkfront1_sprite.set_colorkey(krieger_walkfront1_sprite.get_at((0, 0)))
+krieger_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_front2.png")).convert_alpha()
+krieger_walkfront2_sprite.set_colorkey(krieger_walkfront2_sprite.get_at((0, 0)))
+krieger_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_left1.png")).convert_alpha()
+krieger_walkleft1_sprite.set_colorkey(krieger_walkleft1_sprite.get_at((0, 0)))
+krieger_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_left2.png")).convert_alpha()
+krieger_walkleft2_sprite.set_colorkey(krieger_walkleft2_sprite.get_at((0, 0)))
+krieger_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_right1.png")).convert_alpha()
+krieger_walkright1_sprite.set_colorkey(krieger_walkright1_sprite.get_at((0, 0)))
+krieger_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_right2.png")).convert_alpha()
+krieger_walkright2_sprite.set_colorkey(krieger_walkright2_sprite.get_at((0, 0)))
+krieger_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_back1.png")).convert_alpha()
+krieger_walkback1_sprite.set_colorkey(krieger_walkback1_sprite.get_at((0, 0)))
+krieger_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/walk_back2.png")).convert_alpha()
+krieger_walkback2_sprite.set_colorkey(krieger_walkback2_sprite.get_at((0, 0)))
+
+bosui_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/idle_front.png")).convert_alpha()
+bosui_idle_sprite.set_colorkey(bosui_idle_sprite.get_at((0, 0)))
+bosui_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_front1.png")).convert_alpha()
+bosui_walkfront1_sprite.set_colorkey(bosui_walkfront1_sprite.get_at((0, 0)))
+bosui_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_front2.png")).convert_alpha()
+bosui_walkfront2_sprite.set_colorkey(bosui_walkfront2_sprite.get_at((0, 0)))
+bosui_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_left1.png")).convert_alpha()
+bosui_walkleft1_sprite.set_colorkey(bosui_walkleft1_sprite.get_at((0, 0)))
+bosui_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_left2.png")).convert_alpha()
+bosui_walkleft2_sprite.set_colorkey(bosui_walkleft2_sprite.get_at((0, 0)))
+bosui_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_right1.png")).convert_alpha()
+bosui_walkright1_sprite.set_colorkey(bosui_walkright1_sprite.get_at((0, 0)))
+bosui_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_right2.png")).convert_alpha()
+bosui_walkright2_sprite.set_colorkey(bosui_walkright2_sprite.get_at((0, 0)))
+bosui_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_back1.png")).convert_alpha()
+bosui_walkback1_sprite.set_colorkey(bosui_walkback1_sprite.get_at((0, 0)))
+bosui_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/walk_back2.png")).convert_alpha()
+bosui_walkback2_sprite.set_colorkey(bosui_walkback2_sprite.get_at((0, 0)))
+
+sowa_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/idle_front.png")).convert_alpha()
+sowa_idle_sprite.set_colorkey(sowa_idle_sprite.get_at((0, 0)))
+sowa_walkfront1_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_front1.png")).convert_alpha()
+sowa_walkfront1_sprite.set_colorkey(sowa_walkfront1_sprite.get_at((0, 0)))
+sowa_walkfront2_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_front2.png")).convert_alpha()
+sowa_walkfront2_sprite.set_colorkey(sowa_walkfront2_sprite.get_at((0, 0)))
+sowa_walkleft1_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_left1.png")).convert_alpha()
+sowa_walkleft1_sprite.set_colorkey(sowa_walkleft1_sprite.get_at((0, 0)))
+sowa_walkleft2_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_left2.png")).convert_alpha()
+sowa_walkleft2_sprite.set_colorkey(sowa_walkleft2_sprite.get_at((0, 0)))
+sowa_walkright1_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_right1.png")).convert_alpha()
+sowa_walkright1_sprite.set_colorkey(sowa_walkright1_sprite.get_at((0, 0)))
+sowa_walkright2_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_right2.png")).convert_alpha()
+sowa_walkright2_sprite.set_colorkey(sowa_walkright2_sprite.get_at((0, 0)))
+sowa_walkback1_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_back1.png")).convert_alpha()
+sowa_walkback1_sprite.set_colorkey(sowa_walkback1_sprite.get_at((0, 0)))
+sowa_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/walk_back2.png")).convert_alpha()
+sowa_walkback2_sprite.set_colorkey(sowa_walkback2_sprite.get_at((0, 0)))
+'''
+krieger_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/krieger.png")).convert()
+bosui_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/bosui.png")).convert()
+sowa_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/sowa.png")).convert()
 
 button_size = (500, 100)
 play_button = pygame.Rect((screenx / 2 - button_size[0] / 2, 2.5 * screeny / 5 - button_size[1] / 2), button_size)
@@ -773,11 +824,13 @@ while playing:
                     bomb_max_number = 1
                     explosion_on_grid = []
                     trap, floor_key, bricks_list, bricks_grid = gen_floor(floor_number, player_starting_pos, player_obj)
+                    '''
                     ennemy = gen_ennemy()
                     while not ennemy.rect().collidelist(bricks_list):
                         ennemy = gen_ennemy()
                     
                     ennemy.set_path(player,bricks_grid)
+                    '''
                     player.topleft = player_starting_pos
                     player_speed, speed_malus = 200, 200
                     radius, piercing, strenght = 2, 1, 1
@@ -846,7 +899,6 @@ while playing:
         player_obj = Perso(classe, player_starting_pos)
         player = player_obj.rect()
         while not game_over:
-            player_obj.idle()
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
@@ -878,16 +930,13 @@ while playing:
             nb_frame = (nb_frame + 1) % 12
             player_obj.next_anim(nb_frame)
             if pygame.K_DOWN in current_direction and not pygame.K_UP in current_direction:
-                player_obj.set_sprite(3)
+                player_obj.set_sprite(1)
             elif pygame.K_UP in current_direction and not pygame.K_DOWN in current_direction:
-                player_obj.set_orientation('Front')
-                player_obj.set_sprite(9)
-            elif pygame.K_RIGHT in current_direction and not pygame.K_LEFT in current_direction:
-                player_obj.set_orientation('Right')
-                player_obj.set_sprite(5)
-            elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
-                player_obj.set_orientation('Left')
                 player_obj.set_sprite(7)
+            elif pygame.K_RIGHT in current_direction and not pygame.K_LEFT in current_direction:
+                player_obj.set_sprite(3)
+            elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
+                player_obj.set_sprite(5)
 
             temp_player = player.move(player_velocity.x, 0)
             [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
@@ -899,9 +948,11 @@ while playing:
             if game_window.contains(temp_player) and temp_player.collidelistall(unbreakables_list + [brick.rect() for brick in bricks_list]) == [] and (any([not(temp_player.colliderect(bomb.rect()) and bomb.got_out()) for bomb in bomb_on_grid]) if bomb_on_grid != [] else True):
                 player.y = temp_player.y
             
+            '''
             if ennemy.target_reached():
                 ennemy.set_path(player,bricks_grid)
             ennemy.update()
+            '''
                 
             for bomb in bomb_on_grid:
                 if bomb.timer() >= 0:
@@ -1022,8 +1073,10 @@ while playing:
                                 game_background.blit(vertical_explosion_sprite, explosion)
                         else:
                             game_background.blit(horizontal_explosion_sprite, explosion)
+            '''
             pygame.draw.rect(game_background, "red", ennemy.rect())
             pygame.draw.rect(game_background, "yellow", ennemy.get_target())
+            '''
             screen.blit(game_background, (0, 0))
             screen.blit(score, score_pos)
             screen.blit(timer, timer_pos)
