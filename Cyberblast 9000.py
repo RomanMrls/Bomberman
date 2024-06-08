@@ -63,34 +63,39 @@ class Powerup:
         return score_number - 10
         
     def use(self, score_number, radius, strenght, piercing, player_speed, bomb_max_number):
-        score_number -= 10
+        
         if not self.__effect:
             if self.__powerup_type == "coin":
-                score_number += 15
-            elif self.__powerup_type == "radius_up":
-                radius += 1
-            elif self.__powerup_type == "radius_down":
-                if radius > 2:
-                    radius -= 1
-            elif self.__powerup_type == "strenght_up":
-                strenght += 1
-            elif self.__powerup_type == "strenght_down":
-                if strenght > 1:
-                    strenght -= 1
-            elif self.__powerup_type == "piercing_up":
-                piercing += 1
-            elif self.__powerup_type == "piercing_down":
-                if piercing > 1:
-                    piercing -= 1
-            elif self.__powerup_type == "speed_up":
-                player_speed += 25
-            elif self.__powerup_type == "speed_down":
-                player_speed -= 25
-            elif self.__powerup_type == "bomb_number_up":
-                bomb_max_number += 1
-            elif self.__powerup_type == "bomb_number_down":
-                if bomb_max_number > 1:
-                    bomb_max_number -= 1
+                coin_pick_sfx.play()
+                score_number += 5
+            else :
+                item_pickup_sfx.play()
+                score_number -= 10
+                if self.__powerup_type == "radius_up":
+                    
+                    radius += 1
+                elif self.__powerup_type == "radius_down":
+                    if radius > 2:
+                        radius -= 1
+                elif self.__powerup_type == "strenght_up":
+                    strenght += 1
+                elif self.__powerup_type == "strenght_down":
+                    if strenght > 1:
+                        strenght -= 1
+                elif self.__powerup_type == "piercing_up":
+                    piercing += 1
+                elif self.__powerup_type == "piercing_down":
+                    if piercing > 1:
+                        piercing -= 1
+                elif self.__powerup_type == "speed_up":
+                    player_speed += 25
+                elif self.__powerup_type == "speed_down":
+                    player_speed -= 25
+                elif self.__powerup_type == "bomb_number_up":
+                    bomb_max_number += 1
+                elif self.__powerup_type == "bomb_number_down":
+                    if bomb_max_number > 1:
+                        bomb_max_number -= 1
             return (score_number, radius, strenght, piercing, player_speed, bomb_max_number)
 
     def sprite(self):
@@ -678,6 +683,20 @@ huvud_button = pygame.Rect((510,50), character_button_size_buffed)
 sowa_button = pygame.Rect((725,50), character_button_size)
 start_button = pygame.Rect((screenx / 2 - button_size[0] / 2,750), button_size)
 
+l_bomb_sfx = [pygame.mixer.Sound("music/bullet_shot1.wav"),pygame.mixer.Sound("music/bullet_shot2.wav"),pygame.mixer.Sound("music/bullet_shot3.wav")]
+for sfx in l_bomb_sfx :
+    pygame.mixer.Sound.set_volume(sfx,0.5)
+bomb_sfx = random.choice(l_bomb_sfx)
+die_sfx = pygame.mixer.Sound("music/death_burst_large_2.wav")
+pygame.mixer.Sound.set_volume(die_sfx,0.5)
+item_pickup_sfx = pygame.mixer.Sound("music/pickup_dime_02.wav")
+pygame.mixer.Sound.set_volume(item_pickup_sfx,0.6)
+coin_pickup_sfx = pygame.mixer.Sound("music/pickup_penny_02.wav")
+pygame.mixer.Sound.set_volume(coin_pickup_sfx,0.6)
+bg_music = pygame.mixer.music.load('music/soundtrack.mp3')
+pygame.mixer.music.play(-1)
+
+
 game_size = (750, 750)
 game_window_pos = pygame.Vector2((screenx - game_size[0]) / 2, (screeny - game_size[1]) / 1.5)
 game_window = pygame.Rect(game_window_pos, game_size)
@@ -744,7 +763,7 @@ while playing:
                     game_over = False
                     character_selected = False
                     score_number = 500
-                    floor_number = 100
+                    floor_number = 20
                     timer_counter = floor_timer(floor_number)
                     key_pressed_state = {}
                     powerup_on_grid = []
@@ -884,6 +903,8 @@ while playing:
                 if bomb.timer() >= 0:
                     bomb.timer_increment()
                 if bomb.timer() >= 2:
+                    bomb_sfx = random.choice(l_bomb_sfx)
+                    bomb_sfx.play()
                     if player_obj.get_effect() == "poison":
                         bomb.explosion(bricks_list, 2, 1, 1)
                     else:
@@ -1010,6 +1031,8 @@ while playing:
 
         end_menu += 1
         if end_menu == 0:
+            bomb_sfx.stop()
+            die_sfx.play()
             game_over_text = police4.render("GAME OVER !", True, "#DEFF00")
             game_over_text_rect = game_over_text.get_rect()
             screen.blit(screen_shade, (0, 0))
@@ -1094,6 +1117,7 @@ while playing:
                 pygame.display.update()
 
             score_dict[player_name] = [score_number, floor_number]
+            save_score(score_dict)
         elif end_menu == 2:
             end_menu = -1
             in_game = False
