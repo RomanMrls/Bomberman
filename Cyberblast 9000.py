@@ -66,7 +66,7 @@ class Powerup:
         
         if not self.__effect:
             if self.__powerup_type == "coin":
-                coin_pick_sfx.play()
+                coin_pickup_sfx.play()
                 score_number += 5
             else :
                 item_pickup_sfx.play()
@@ -197,52 +197,36 @@ class Bomb:
 
 """
 animations[0] = Regard de face
-animations[1] = Regard 3/4 droite
-animations[2] = Regard 3/4 gauche
-animations[3] = Marche devant 1
-animations[4] = Marche devant 2
-animations[5] = Marche droite 1
-animations[6] = Marche droite 2
-animations[7] = Marche gauche 1
-animations[8] = Marche gauche 2
-animations[9] = Marche derrière 1
-animations[10] = Marche derrière 2
+animations[1] = Marche devant 1
+animations[2] = Marche devant 2
+animations[3] = Marche droite 1
+animations[4] = Marche droite 2
+animations[5] = Marche gauche 1
+animations[6] = Marche gauche 2
+animations[7] = Marche derrière 1
+animations[8] = Marche derrière 2
 """
 
 
 class Perso:
     def __init__(self, classe, pos):
         self.__class = classe
-        '''
         if classe == 'krieger':
-            self.__animations = [krieger_idle_face_sprite, krieger_idle_right_sprite, krieger_idle_left_sprite,
-                                 krieger_walkfront1_sprite, krieger_walkfront2_sprite, krieger_walkright1_sprite,
-                                 krieger_walkright2_sprite, krieger_walkleft1_sprite, krieger_walkleft2_sprite,
-                                 krieger_walkback1_sprite, krieger_walkback2_sprite]
+            self.__animations = [krieger_sprite]*9
         elif classe == 'huvud':
-            self.__animations = [huvud_idle_face_sprite, huvud_idle_right_sprite, huvud_idle_left_sprite, huvud_walkfront1_sprite,
-                                 huvud_walkfront2_sprite, huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite,
-                                 huvud_walkleft2_sprite, huvud_walkback1_sprite, huvud_walkback2_sprite]
+            self.__animations = [huvud_idle_sprite, huvud_walkfront1_sprite, huvud_walkfront2_sprite,
+                                 huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite, huvud_walkleft2_sprite,
+                                 huvud_walkback1_sprite, huvud_walkback2_sprite]
         elif classe == 'bosui':
-            self.__animations = [bosui_idle_face_sprite, bosui_idle_right_sprite, bosui_idle_left_sprite,
-                                 bosui_walkfront1_sprite, bosui_walkfront2_sprite, bosui_walkright1_sprite,
-                                 bosui_walkright2_sprite, bosui_walkleft1_sprite, bosui_walkleft2_sprite,
-                                 bosui_walkback1_sprite, bosui_walkback2_sprite]
+            self.__animations = [bosui_sprite]*9
         elif classe == 'sowa':
-            self.__animations = [sowa_idle_face_sprite, sowa_idle_right_sprite, sowa_idle_left_sprite,
-                                 sowa_walkfront1_sprite, sowa_walkfront2_sprite, sowa_walkright1_sprite,
-                                 sowa_walkright2_sprite, sowa_walkleft1_sprite, sowa_walkleft2_sprite,
-                                 sowa_walkback1_sprite, sowa_walkback2_sprite]
-        '''
-        self.__animations = [huvud_idle_sprite, huvud_idle_sprite, huvud_idle_sprite, huvud_walkfront1_sprite, huvud_walkfront2_sprite,
-                             huvud_walkright1_sprite, huvud_walkright2_sprite, huvud_walkleft1_sprite, huvud_walkleft2_sprite,
-                             huvud_walkback1_sprite, huvud_walkback2_sprite]
+            self.__animations = [sowa_sprite]*9
+        
         self.__rect = pygame.Rect(pos, player_size)
         self.__effect = None
         self.__timer_effect = -1
         self.__timer_capa = -1
         self.__sprite = self.__animations[0]
-        self.__orientation = 'Front'
         self.__current_anim = 0
 
     def give_effect(self, effect):
@@ -268,9 +252,6 @@ class Perso:
     def current_anim(self):
         return self.__current_anim
 
-    def orientation(self):
-        return self.__orientation
-
     def sprite(self):
         return self.__sprite
 
@@ -281,16 +262,6 @@ class Perso:
         if nb_frame == 0:
             self.__current_anim = (self.__current_anim + 1) % 2
 
-    def set_orientation(self, orientation):
-        self.__orientation = orientation
-
-    def idle(self):
-        if self.__orientation == 'Right':
-            self.__sprite = self.__animations[1]
-        elif self.__orientation == 'Left':
-            self.__sprite = self.__animations[2]
-        else:
-            self.__sprite = self.__animations[0]
 
 class Ennemy:
     def __init__(self, pos, speed, classe):
@@ -504,6 +475,13 @@ def load_score(fn="./score.txt"):
         return {}
     return hs
 
+def best(dico) :
+    best_floor = 0
+    for _,floor in dico.values() :
+        if floor > best_floor :
+            best_floor = floor
+    return best_floor
+
 def display_scores(dictionary, player_name=""):
     text_surface = police4.render("Scoreboard", True, (255, 255, 255))
     text_surface_rect = text_surface.get_rect()
@@ -598,6 +576,20 @@ screen_shade.fill((0, 0, 0, 100))
 
 current_dir = os.path.dirname(__file__)
 
+score_dict = load_score()
+PB = best(score_dict)
+sowa_unlocked = False
+huvud_unlocked = False
+bosui_unlocked = False
+if PB >= 20 :
+    sowa_unlocked = True
+    huvud_unlocked = True
+    bosui_unlocked = True
+elif PB >= 10 :
+    huvud_unlocked = True
+    bosui_unlocked = True
+elif PB >= 5 :
+    bosui_unlocked = True
 
 game_background = pygame.image.load(os.path.join(current_dir, "image/background/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/background/menu_background.png")).convert()
@@ -644,10 +636,22 @@ poison_sprite = pygame.image.load(os.path.join(current_dir, "image/items/poison_
 playbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/play_bouton.png")).convert()
 extrabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/extra_bouton.png")).convert()
 quitbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/quit_bouton.png")).convert()
+startbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/start_bouton.png")).convert()
+
 kriegerbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/krieger_bouton.png")).convert()
-bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/bosui_bouton.png")).convert()
-huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/huvud_bouton.png")).convert()
-sowabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/sowa_bouton.png")).convert()
+if sowa_unlocked :
+    sowabouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/sowa_bouton.png")).convert()
+else :
+    sowabouton_sprite =  pygame.image.load(os.path.join(current_dir, "image/bouton/lockedsowa_bouton.png")).convert()
+if bosui_unlocked :
+    bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/bosui_bouton.png")).convert()
+else :
+    bosuibouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/lockedbosui_bouton.png")).convert()
+if huvud_unlocked :
+    huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/huvud_bouton.png")).convert()
+else :
+    huvudbouton_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/lockedhuvud_bouton.png")).convert()
+
 select_sprite = pygame.image.load(os.path.join(current_dir, "image/bouton/select_bouton.png")).convert_alpha()
 
 huvud_idle_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/idle_front.png")).convert()
@@ -669,6 +673,10 @@ huvud_walkback1_sprite.set_colorkey(huvud_walkback1_sprite.get_at((0, 0)))
 huvud_walkback2_sprite = pygame.image.load(os.path.join(current_dir, "image/huvud/walk_back2.png")).convert()
 huvud_walkback2_sprite.set_colorkey(huvud_walkback2_sprite.get_at((0, 0)))
 
+krieger_sprite = pygame.image.load(os.path.join(current_dir, "image/krieger/krieger.png")).convert()
+sowa_sprite = pygame.image.load(os.path.join(current_dir, "image/sowa/sowa.png")).convert()
+bosui_sprite = pygame.image.load(os.path.join(current_dir, "image/bosui/bosui.png")).convert()
+
 button_size = (500, 100)
 play_button = pygame.Rect((screenx / 2 - button_size[0] / 2, 2.5 * screeny / 5 - button_size[1] / 2), button_size)
 info_button = pygame.Rect((screenx / 2 - button_size[0] / 2, 3.25 * screeny / 5 - button_size[1] / 2), button_size)
@@ -689,7 +697,7 @@ for sfx in l_bomb_sfx :
 bomb_sfx = random.choice(l_bomb_sfx)
 die_sfx = pygame.mixer.Sound("music/death_burst_large_2.wav")
 pygame.mixer.Sound.set_volume(die_sfx,0.5)
-item_pickup_sfx = pygame.mixer.Sound("music/pickup_dime_02.wav")
+item_pickup_sfx = pygame.mixer.Sound("music/pickup_dime_01.wav")
 pygame.mixer.Sound.set_volume(item_pickup_sfx,0.6)
 coin_pickup_sfx = pygame.mixer.Sound("music/pickup_penny_02.wav")
 pygame.mixer.Sound.set_volume(coin_pickup_sfx,0.6)
@@ -813,26 +821,26 @@ while playing:
                     character_background = krieger_background
                     classe = 'krieger'
                     selected_buton = krieger_button
-                elif huvud_button.collidepoint(pygame.mouse.get_pos()):
+                elif huvud_button.collidepoint(pygame.mouse.get_pos()) and huvud_unlocked :
                     character_background = huvud_background
                     classe = 'huvud'
                     selected_buton = huvud_button
-                elif sowa_button.collidepoint(pygame.mouse.get_pos()):
+                elif sowa_button.collidepoint(pygame.mouse.get_pos()) and sowa_unlocked :
                     character_background = sowa_background
                     classe = 'sowa'
                     selected_buton = sowa_button
-                elif bosui_button.collidepoint(pygame.mouse.get_pos()):
+                elif bosui_button.collidepoint(pygame.mouse.get_pos()) and bosui_unlocked :
                     character_background = bosui_background
                     selected_buton = bosui_button
                     classe = 'bosui'
-                elif start_button.collidepoint(pygame.mouse.get_pos()):
+                elif start_button.collidepoint(pygame.mouse.get_pos()) and selected_buton :
                     character_selected = True
             screen.blit(character_background, (0, 0))            
             screen.blit(kriegerbouton_sprite, krieger_button)
             screen.blit(huvudbouton_sprite, huvud_button)
             screen.blit(sowabouton_sprite, sowa_button)
             screen.blit(bosuibouton_sprite, bosui_button)
-            screen.blit(playbouton_sprite, start_button)
+            screen.blit(startbouton_sprite, start_button)
             if selected_buton != None :
                 screen.blit(select_sprite, selected_buton)
             pygame.display.update()
@@ -840,7 +848,6 @@ while playing:
         player_obj = Perso(classe, player_starting_pos)
         player = player_obj.rect()
         while not game_over:
-            player_obj.idle()
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
                     if timer_counter > 0:
@@ -872,16 +879,13 @@ while playing:
             nb_frame = (nb_frame + 1) % 12
             player_obj.next_anim(nb_frame)
             if pygame.K_DOWN in current_direction and not pygame.K_UP in current_direction:
-                player_obj.set_sprite(3)
+                player_obj.set_sprite(1)
             elif pygame.K_UP in current_direction and not pygame.K_DOWN in current_direction:
-                player_obj.set_orientation('Front')
-                player_obj.set_sprite(9)
-            elif pygame.K_RIGHT in current_direction and not pygame.K_LEFT in current_direction:
-                player_obj.set_orientation('Right')
-                player_obj.set_sprite(5)
-            elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
-                player_obj.set_orientation('Left')
                 player_obj.set_sprite(7)
+            elif pygame.K_RIGHT in current_direction and not pygame.K_LEFT in current_direction:
+                player_obj.set_sprite(3)
+            elif pygame.K_LEFT in current_direction and not pygame.K_RIGHT in current_direction:
+                player_obj.set_sprite(5)
 
             temp_player = player.move(player_velocity.x, 0)
             [bomb.test_if_out(temp_player) for bomb in bomb_on_grid]
@@ -953,6 +957,9 @@ while playing:
             if player_obj.get_effect() != "shield":
                 for bomb in bomb_on_grid:
                     if player.collidelistall(bomb.get_explosion_trail()):
+                        game_over = True
+                for ennemy in ennemies_list :
+                    if player.collidelistall([ennemy.rect()]) :
                         game_over = True
             for powerup in powerup_on_grid:
                 if player.colliderect(powerup.rect()):
