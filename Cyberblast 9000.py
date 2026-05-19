@@ -597,6 +597,7 @@ elif PB >= 5 :
 
 game_background = pygame.image.load(os.path.join(current_dir, "image/background/game_background.png"))
 menu_background = pygame.image.load(os.path.join(current_dir, "image/background/menu_background.png")).convert()
+scoreboard = pygame.image.load(os.path.join(current_dir, "image/background/scoreboard.png")).convert()
 blank_background = pygame.image.load(os.path.join(current_dir, "image/background/blank_background.png")).convert()
 krieger_background = pygame.image.load(os.path.join(current_dir, "image/background/krieger_background.png")).convert()
 huvud_background = pygame.image.load(os.path.join(current_dir, "image/background/huvud_background.png")).convert()
@@ -742,7 +743,6 @@ pygame.mixer.Sound.set_volume(item_pickup_sfx,0.6)
 coin_pickup_sfx = pygame.mixer.Sound("music/pickup_penny_02.wav")
 pygame.mixer.Sound.set_volume(coin_pickup_sfx,0.6)
 bg_music = pygame.mixer.music.load('music/soundtrack.mp3')
-pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
 
@@ -1169,7 +1169,7 @@ while playing:
         elif end_menu == 2:
             end_menu = -1
             in_game = False
-            screen.blit(blank_background, (0, 0))
+            screen.blit(scoreboard, (0, 0))
             display_scores(score_dict, player_name)
             pygame.display.update()
             pygame.time.wait(3500)
