@@ -742,6 +742,7 @@ pygame.mixer.Sound.set_volume(item_pickup_sfx,0.6)
 coin_pickup_sfx = pygame.mixer.Sound("music/pickup_penny_02.wav")
 pygame.mixer.Sound.set_volume(coin_pickup_sfx,0.6)
 bg_music = pygame.mixer.music.load('music/soundtrack.mp3')
+pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
 
