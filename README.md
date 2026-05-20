@@ -5,7 +5,7 @@ Un clone de Bomberman développé en Python avec la bibliothèque Pygame.
 
 Ce projet reprend le principe du jeu d'arcade classique : se déplacer sur une grille, poser des bombes, détruire les obstacles et éliminer les adversaires. Les assets graphiques, les musiques et la police d'écriture (`PressStart2P.ttf`) ont été choisis pour garder un vrai style rétro.
 
-## ⚙️ Prérequis et Installation
+## Prérequis et Installation
 
 Vous aurez besoin de Python 3.12 et de Pygame pour faire tourner le projet.
 
